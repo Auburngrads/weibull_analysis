@@ -1,0 +1,253 @@
+---
+title: "Addressing potential reasons for discrepancies between Weibull Plots created by different organizations"
+author: "Jason Freels"
+date: "12/5/2021"
+output: 
+  bookdown::pdf_document2:
+    toc: false
+    number_sections: no
+---
+
+```{r setup, include=FALSE, echo=FALSE}
+knitr::opts_chunk$set(echo = !TRUE,
+                      fig.align = "center", 
+                      fig.width = 7,
+                      fig.height = 5,
+                      fig.cap = T)
+
+## Linear plots
+xlines = c(seq(1,9,1),
+           seq(10,90,10),
+           seq(100,900,100),
+           seq(1000,9000,1000),
+           seq(10000,90000,10000))
+
+xvals = c(seq(1,5,1),
+          seq(10,50,10),
+          seq(100,500,100),
+          seq(1000,5000,1000),
+          seq(10000,50000,10000))
+
+ylines = c(seq(.0001,.0009,.0001),
+         seq(.001,.009,.001),
+         seq(.01,.09,.01),
+         seq(.1,.9,.1),
+         .95,.99,.995,.999,.9995,.9999,.632)
+
+yvals = c(.0001,.0005,.001,.005,.01,.05,.1,
+          .5,.9,.95,.99,.995,.999,.9995,.9999,.632)
+
+.fun = function(x,y,params){
+  
+  return(sum((y - (params[1] * (x - log(params[2]))))**2))
+  
+}
+```
+
+# Background
+
+In the B-1 eRCM meeting on Friday, 3 December, the RSO presented several Weibull plots that were produced using an algorithm developed by C3.ai.  It's anticipated that this algorithm will be implemented as part of their PANDA dashboard.  During this meeting some concerns were raised about differences between the reliability thresholds suggested by the Weibull plots created by C3.ai and the plots that were developed by PavCon. 
+
+PANDA is set to become the system of record for setting CBM+ reliability thresholds.  The thresholds are based on the analyses presented in these Weibull plots.  Therefore, it's critical that the methods implemented to create these plots be well documented.  
+
+This document highlights some possible reasons for discrepancies between the plots created by C3.ai and PavCon and suggests some possible ways to minimize them. It must be noted that the data used to create these Weibull plots can be very messy (more on this below).  Consequently, choosing the **most correct** way to generate these plots involves answering two questions:
+
+1. What is the analyst's approach to modeling the data?
+2. How are the failure events defined and how they are included in the analysis?
+
+These questions are fleshed out below.  \color{red}**Note:**\color{black}\; I do not address the most basic and obvious question: "Are we sure that both organizations are using the same data?" Everything that follows assumes that they are.
+
+# Question 1: What is the analyst's approach to modeling the data?
+
+## Question 1(a) What estimator is used in these plots?
+
+Figure \@ref(fig:fig-mr) shows a Weibull plot I created from $150$ randomly generated time to failure observations.  This data set is composed of 17 observations from a $WEIB(\beta = 4.2, \eta=5.7)$ distribution and 133 observations from a $WEIB(\beta = 0.943, \eta=1754)$ distribution.  This mixture of Weibull distributions was done to generate a data set that produces a Weibull plot that resembles those that have been presented for CBM+ fielded components. Suppose that all times are in hours.
+
+```{r data-maker}
+risk_set = 150
+shape = 4.2
+scale = 5.7
+shape2 = 0.943
+scale2 = 1754
+N1 = 17
+N2 = risk_set - N1
+
+obs1 = rweibull(N1, shape = shape, scale = scale)
+obs2 = rweibull(N2, shape = shape2, scale = scale2)
+
+
+obs = sort(c(obs1, obs2))
+ranks = rank(obs)
+
+df = data.frame(event = 0,
+                n_fails = 0,
+                time = 0,
+                at_risk = risk_set,
+                median_ranks = 0,
+                km_raw = 1,
+                kaplan_meier = 1)
+
+for(i in 1:length(obs)) {
+
+    event = df$event[i] + 1
+    fails = length(which(obs == obs[i]))
+    km_raw = 1 - (fails / df$at_risk[i])
+    km = km_raw * df$kaplan_meier[i]
+    mr = (ranks[i] - 0.3) / (length(obs) + 0.4)
+
+    df = rbind(df, list(event = event,
+                        n_fails = fails,
+                        time = obs[i],
+                        at_risk = df$at_risk[i] - fails,
+                        median_ranks = mr,
+                        km_raw = km_raw,
+                        kaplan_meier = km))
+}
+```
+
+```{r fig-mr, fig.cap="Randomly generated failures plotted on Weibull paper"}
+par(las = 1, mar = c(5.1, 4.75, 4.1, 2.1))
+plot(x = log(c(df$time)),
+     y = log(log(1/c(1- df$median_ranks))),
+     pch = 16,
+     cex = 1.25,
+     xaxt = "n",
+     yaxt = "n",
+     xlim = c(log(1), log(max(df$time))),
+     ylim = log(log(1/(1-c(0.0001,.9999)))),
+     xlab = "Failure Time",
+     ylab = "Unreliability")
+axis(side = 1,
+     at = log(xvals),
+     labels = xvals)
+abline(v = log(xlines),
+       lwd = 2,
+       col = scales::alpha("steelblue",0.25))
+axis(side = 2,
+     at = log(log(1/(1-yvals))),
+     labels = yvals)
+abline(h = log(log(1/(1-ylines))),
+       lwd = 2,
+       col = scales::alpha("steelblue",0.25))
+```
+
+To generate this - or any - Weibull plot, the $x$ and $y$ axes must be transformed in a specific manner (I won't go into this here). This is done because the first question we want to answer with a Weibull plot is - "Is the Weibull distribution a good model to describe the failure process that is revealed by this data".  If the points fall **\underline{roughly}** on a straight line when plotted on these transformed axes, we have some evidence that the Weibull distribution **is** a good choice.
+
+But, what exactly are these points being plotted?  The value of each point along the x-axis is pretty clear, these are the failure times (sorted from smallest to largest). The value of each point along the y-axis are more complicated.  To determine the $y$ value for each point, the analyst first has to choose an estimator for the failure probability (aka Unreliability).  Several estimators exist for this purpose, but some of the most commonly used are: [\color{blue}**median-ranks**](http://www.engineeredsoftware.com/nasa/pe_median.htm#:~:text=The%20median%20rank%20estimate%20for%20F%28x%29%20is%20where,a%20modified%20order%20of%20failure%20is%20as%20follows.){target="blank"}, [\color{blue}**Kaplan-Meier**](https://www.weibull.com/hotwire/issue11/relbasics11.htm){target="blank"}, and [\color{blue}**Turnbull**](https://www.researchgate.net/publication/281870819_Turnbulls_Nonparametric_Estimator_for_Interval-Censored_Data).   
+
+The plot shown in Figure \@ref(fig:fig-mr) used the median ranks estimator.  Figure \@ref(fig:fig-km), shown below, includes both the median-ranks estimate and the Kaplan-Meier estimate (the Kaplan-Meier estimate is shown in red).  For this data set the difference between the estimates is small, and would likely not impact values of the Weibull parameters ($\beta$, and $\eta$).  For some data sets, however, the difference may be more pronounced.  
+
+
+```{r fig-km, fig.cap="Plot of the 150 randomly generated failures along with the median-ranks and the Kaplan-Meier estimates"}
+par(las = 1, mar = c(5.1, 4.75, 4.1, 2.1))
+plot(x = log(c(df$time)),
+     y = log(log(1/c(1- df$median_ranks))),
+     pch = 16,
+     cex = 1.25,
+     xaxt = "n",
+     yaxt = "n",
+     xlim = c(log(1), log(max(df$time))),
+     ylim = log(log(1/(1-c(0.0001,.9999)))),
+     xlab = "Failure Time",
+     ylab = "Unreliability")
+points(x = log(c(df$time)),
+       y = log(log(1/c(df$kaplan_meier))),
+       pch = 4,
+       cex = 1.25,
+       col = "red")
+axis(side = 1,
+     at = log(xvals),
+     labels = xvals)
+abline(v = log(xlines),
+       col = scales::alpha("steelblue",0.25))
+axis(side = 2,
+     at = log(log(1/(1-yvals))),
+     labels = yvals)
+abline(h = log(log(1/(1-ylines))),
+       col = scales::alpha("steelblue",0.25))
+```
+
+## Question 1(b): How are the data modeled?
+
+Figures \@ref(fig:fig-mr) and \@ref(fig:fig-km) show that the choice of estimator may not significantly effect the plots or the chosen threshold values.  However, the method used to fit the Weibull distribution to the data can have a more pronounced impact on the reliability threshold values derived from the plot.  Figure \@ref(fig:fig-model) shows the result of fitting the data to a Weibull distribution using least squares (red line) and maximum likelihood (blue line).  
+
+```{r fits, cache=TRUE, message=FALSE, results='hide'}
+N  = nrow(df)
+x  = log(df$time)[-c(1,N)]
+y1 = log(log(1/df$kaplan_meier))[-c(1,N)]
+y2 = log(log(1/(1-df$median_ranks)))[-c(1,N)]
+
+f1 = optim(par = c(1.2,3000),
+      fn = .fun,
+      x = x, y = y1)
+f2 = optim(par = c(1.2,3000),
+      fn = .fun,
+      x = x, y = y2)
+f3 <- fitdistrplus::fitdist(obs, distr = "weibull")
+
+t1 = qweibull(0.2,sh = f3$e[1],   sc = f3$e[2])
+t2 = qweibull(0.2,sh = f1$par[1], sc = f1$par[2])
+tr = (t1 - t2)/ t1
+```
+
+
+A horizontal line is included on plot showing where the 20% failure probability mark intersects both of these lines.  The two vertical lines represent the failure times corresponding to a 20% failure probability for the models obtained using least squares ($`r round(t2,2)`$ hours) and maximum likelihood ($`r round(t1,2)`$ hours), respectively.  The plot shows a $`r paste0(round(tr*100,2),"\\%")`$ difference in the threshold value depending on the modeling approach chosen. **In almost every situation maximum likelihood is a better choice for fitting distributions to reliability data.**
+
+```{r, fig-model, fig.cap="Weibull distribution fits to randomly generated data using least squares estimation and maximum likelihood estimation"}
+par(las = 1, mar = c(5.1, 4.75, 4.1, 2.1))
+plot(x = log(df$time),
+     y = log(log(1/df$kaplan_meier)),
+     pch = 16,
+     xlim = c(log(1), log(max(df$time))),
+     xaxt = "n",
+     yaxt = "n",
+     ylim = log(log(1/(1-c(0.0001,.9999)))),
+     xlab = "Failure Time",
+     ylab = "Unreliability")
+axis(side = 1,
+     at = log(xvals),
+     labels = xvals)
+abline(v = log(xlines),
+       col = scales::alpha("steelblue",0.25))
+axis(side = 2,
+     at = log(log(1/(1-yvals))),
+     labels = yvals)
+abline(h = log(log(1/(1-ylines))),
+       col = scales::alpha("steelblue",0.25))
+## MLE fit
+lines(x = log(obs),
+      y = log(log(1/(1-pweibull(obs, sh = f3$e[1], sc = f3$e[2])))),
+      col = "blue",
+      lwd = 2)
+## OLS MR fit
+lines(x = log(obs),
+      y = log(log(1/(1-pweibull(obs, sh = f1$par[1], sc = f1$par[2])))),
+      col = "red",
+      lwd = 2)
+segments(x0 = rep(0,2),
+         x1 = c(log(qweibull(0.2,sh = f3$e[1], sc = f3$e[2])),
+                log(qweibull(0.2,sh = f1$par[1], sc = f1$par[2]))),
+         y0 = rep(log(log(1/(1-0.2))),2),
+         y1 = rep(log(log(1/(1-0.2))),2))
+segments(x0 = c(log(qweibull(0.2,sh = f3$e[1], sc = f3$e[2])),
+                log(qweibull(0.2,sh = f1$par[1], sc = f1$par[2]))),
+         x1 = c(log(qweibull(0.2,sh = f3$e[1], sc = f3$e[2])),
+                log(qweibull(0.2,sh = f1$par[1], sc = f1$par[2]))),
+         y0 = rep(log(log(1/(1-0.00001))),2),
+         y1 = rep(log(log(1/(1-0.2))),2),
+         col = c("blue","red"))
+```
+
+# Question 2: How are the failure events defined and how they are included in the analysis? 
+
+## Question 2(a) What is meant by "clean failure intervals"?
+
+In previous CBM+ meetings, both PavCon and C3.ai referred to the points shown on Weibull plots as "clean failure intervals".  From a reliability analysis perspective, "failure interval" means that the failure time is only known to have occurred between the start time, $t_{start}$, and an end time, $t_{end}$.  We don't know the exact failure time, only that the item failed sometime between $t_{start}$ and $t_{end}$ and was discovered during an inspection or maintenance action.  These failures \underline{should} be treated as censored observations (aka suspensions) to accurately reflect our uncertainty about when these items failed.  
+
+Looking at the points shown in the Weibull charts begs the question: how are these time intervals collapsed down to points? It's likely that these points represent either the endpoint of the interval (assume that the failure occurred when we discovered it) or the midpoint.
+
+> **While it's not correct to collapse failure intervals down to single points, it's also not uncommon - particularly when working with messy data.  Regardless, the choice of how to represent these interval failures should be documented and applied consistently.**
+
+## Question 2(b) What about the suspensions?
+
+The Weibull plots developed by both PavCon and C3.ai include references the suspensions (or censored observations) in the data. In many cases, the data set contains more suspensions than "clean failure intervals". **Are these observations included in the analysis?** 
