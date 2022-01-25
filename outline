@@ -1,0 +1,25 @@
+Reliability Basics
+
+Understand Reliability
+ Reliability - Maintainability - Availability
+ MTTF vs MTBF (nonrepairable vs repairable items)
+
+Understanding Reliability Data
+ Data structures for nonrepairable systems
+ Data structures for repairable systems
+ Censored observations (right, left, and interval censored)
+ Introduce explanatory variables (e.g. covariates, features)
+
+Fitting models to Reliability Data
+  nonparametric reliability estimates (Kaplan-Meijer estimator, Nelson-Aalen estimator)
+  Probability Distribtions (Weibull, exponential, lognormal)
+  Distribution functions (PDF, CDF, survival, hazard, cumulative hazard, quantile)
+  Graphical methods for fitting distributions to reliability data (weibull plots, exponential plots, lognormal plots)
+  Likelihood based methods for fitting distributions to reliability data
+
+Assessing uncertainty
+  Confidence intervals based on the normal distribution
+  Likelihood based confidence intervals
+  bootstrap based confidence intervals
+
+Understanding and documenting your model assumptions
