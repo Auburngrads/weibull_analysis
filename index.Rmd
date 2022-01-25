@@ -751,9 +751,11 @@ Best fit line representing the predicted values from the Weibull model
 .panel[.panel-name[Method 1: Transform the data (linearize the CDF)]
 
 .pull-left[
+
 ```{r}
 knitr::include_graphics(file.path(root, "images"  ,"build_weibull","both_axes_2-crop.png"))
 ```
+
 ]
 
 .pull-right[
