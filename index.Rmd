@@ -5,7 +5,8 @@ date: "`r format(Sys.Date(), '%d %b %Y')`"
 output:
   xaringan::moon_reader:
     css: ["default",
-          "css/xaringan.css"]
+          "css/xaringan.css",
+          "css/font-awesome-animation.min.css"]
     self_contained: true
     lib_dir: libs
     chakra: libs/remark-latest-min.js
@@ -15,13 +16,13 @@ output:
       highlightStyle: github
       highlightLines: true
       countIncrementalSlides: false
-      
     yolo: false
 ---
 class: inverse, left, bottom, hide_logo
-background-image: url("images/U.S.-Air-Force.jpg")
-background-position: center
-background-size: cover
+<!--background-image: url("images/U.S.-Air-Force.jpg")-->
+<!-- background-image: url("images/rso.png") -->
+<!-- background-position: top, left -->
+<!-- background-size: 50 -->
 
 # Introduction to Weibull Analysis
 
@@ -45,12 +46,14 @@ library(highcharter)
 library(xaringanExtra)
 xaringanExtra::use_panelset()
 library(ggplot2)
+library(plotly)
+library(SMRD)
 theme_set(theme_bw())
 #library(SMRD)
 root = rprojroot::find_root(rprojroot::is_git_root)
 ```
 
-```{r xaringan-logo, echo=FALSE, eval=!FALSE}
+```{r xaringan-logo, echo=FALSE, eval=FALSE}
 xaringanExtra::use_logo(
   image_url = "https://pbs.twimg.com/profile_images/1242553053519073281/X2fHgMX9_400x400.jpg",
   width = "60px",
@@ -184,23 +187,64 @@ This presentation introduces several aspects of Weibull analysis and how they ar
 
     + Background, properties, and importance
     + Distribution functions
-    + Parameters 
-        + Shape parameter $\beta$ 
-        + Scale parameter $\eta$
-        + Location parameter $\theta$
+    + Parameters: shape $\beta$, scale $\eta$, location $\theta$
     + Relationship to other distributions
 
-- Graphical methods of estimating the Weibull shape and scale parameters
+- Weibull probability plots
 
-- Numerical methods of estimating the Weibull shape and scale parameters
+    + Constructing the plot
+    + Plotting the observed events
+    + Fitting the Weibull model and estimating parameters
 
 $$\newcommand\redbf[1]{\color{red}{\boldsymbol{#1}}}$$
 $$\newcommand\mbf[1]{{\boldsymbol{#1}}}$$
-
 $$\newcommand\greenbf[1]{\color{green}{\boldsymbol{#1}}}$$
-
 $$\newcommand\bluebf[1]{\color{blue}{\boldsymbol{#1}}}$$
 $$\newcommand\purplebf[1]{\color{purple}{\boldsymbol{#1}}}$$
+
+---
+## About this presentation
+
+.panelset[.panel[.panel-name[Navigating this presentation]
+
+.pull-left[
+
+Note the navbar above `r fontawesome::fa_i("hand-point-up", class="faa-bounce animated")` 
+
++ Several slides in this presentation include panels that contain more information about a topic
++ Depending on the browser you're using, the left and right arrow keys may be used to navigate the panels 
++ Otherwise, you can click the panel title to view the content on that panel
+
+This presentation also includes interactive elements
+
++ <span class="explain">Hoverable text tooltips</span><span class="tooltip">When you hover over these text elements a pop-up window appears to show additional information</span> are shown using red-ish text and a dotted underline
++ many of the graphs are also interactive, like the one shown to the right these graphs provide additional data when you hover over them
+
+]
+
+.pull-right[
+
+<iframe src="images/p.html" width="100%" height="400" id="igraph" scrolling="no" seamless="seamless" frameBorder="0"></iframe>
+
+]
+
+.panel[.panel-name[Details about this presentation]
+
+This is an HTML presentation created using the <a target=" " href="https://remarkjs.com/#1">Remarkjs</a> slideshow framework along with the following resources
+
+- <a target=" " href="https://rmarkdown.rstudio.com/">RMarkdown</a>
+- <a target=" " href="https://www.mathjax.org/">MathJax</a>
+- <a target=" " href="https://plotly.com/">Plotly</a>
+- <a target=" " href="https://imagemagick.org/index.php">Image Magick</a>
+- <a target=" " href="https://imagemagick.org/index.php">Font Awesome</a>
+
+The open-source code used to create these slides can be accessed from <a target=" " href="https://github.com/Auburngrads/weibull_analysis">this Github repo</a>
+
+Upon accessing this presentation, several server-side resources may take a few seconds to fully load - if things don't render properly or if you find an error, please <a target=" " href="https://github.com/Auburngrads/weibull_analysis/issues/new/choose">create an issue</a> 
+
+]
+]
+]
 
 ---
 class: inverse, left, bottom, hide_logo
@@ -243,15 +287,15 @@ Weibull popularized his namesake distribution after publishing the <span class="
 
 The Weibull distribution is a member of a distribution family called "lifetime distributions"
 
-- These distributions describe continuous random variables that are defined over strictly positive values - $T \in \mathbb{R}^{+}$
+- These distributions describe continuous random variables (R.V.) defined over strictly positive values - $T \in \mathbb{R}^{+}$
 - There are many members of the lifetime distribution family (exponential, lognormal, loglogistic, gamma, Birmbaum-Saunders)
 - Likewise, there are many distributions that are not members of the lifetime distribution family (normal, logistic, smallest extreme value)
 
 Lifetime distributions have successfully served as population models for failure times arising from a wide range of products and failure mechanisms
 
-- In some cases there are probabilistic arguments based on the physics of failure  that justify the choice of a model
+- In some cases there are probabilistic arguments based on the physics of failure that justify the choice of a model
 - More often, however, the model chosen solely because of its demonstrated success in fitting failure data 
-- <font color="red">**This is why the Weibull distribution is so popular**</font> - it's a flexible distribution, capable of fitting many different failure patterns
+- <u>**This is why the Weibull distribution is so popular**</u> - it's a flexible distribution, capable of fitting many different failure patterns
 
 The Weibull is also a member of the extreme value distribution family
 
@@ -268,44 +312,17 @@ The Weibull is also a member of the extreme value distribution family
 <!-- the practitioner attempts to make predictions about the life of all products in the population by fitting a statistical distribution to life data from a representative sample of units. -->
 
 ---
-## Weibull shape and scale parameters
-
-.pull-left[
-
-$$
-\begin{aligned}
-F(t = \theta|\theta,\beta) &= 1 - \exp\bigg[-\bigg(\frac{\theta}{\theta}\bigg)^{\beta}\bigg]\\\\
- &= 1 - \exp\bigg[-\bigg(1\bigg)^{\beta}\bigg]\\\\
-&=1-\exp\bigg[-1\bigg]\\\\
-&=1-`r round(exp(-1), dig=3)`\\\\
-&=`r 1-round(exp(-1), dig=3)`
-\end{aligned}
-$$
-
-]
-
-.pull-right[
-
-$$
-\begin{aligned}
-F(t| \theta, \beta=1) &= 1 - \exp\bigg[-\bigg(\frac{t}{\theta}\bigg)^{1}\bigg]
-\end{aligned}
-$$
-
-]
-
----
-## Probability Distribution Functions - CDF & PDF
+## Distribution Functions - PDF & CDF
 
 ```{r, echo=FALSE}
 weib_F = "F(t) = 1-\\exp\\left[-\\left(\\frac{t}{\\eta}\\right)^{\\beta}\\right]"
 weib_f = "f(t) = \\frac{\\beta}{\\eta}\\left(\\frac{t}{\\eta}\\right)^{\\beta-1}\\exp\\left[-\\left(\\frac{t}{\\eta}\\right)^{\\beta}\\right]"
-weib_R = "$\\displaystyle S(t) = \\exp\\left[-\\left(\\frac{t}{\\eta}\\right)^{\\beta}\\right]$"
-gen_h = "$\\displaystyle h(t) = \\lim_{\\Delta t \\to 0} \\frac{\\Pr(t < T \\le t+\\Delta t\\vert T \\ge t)}{\\Delta t}$"
+weib_R = "S(t) = \\exp\\left[-\\left(\\frac{t}{\\eta}\\right)^{\\beta}\\right]"
+gen_h = "h(t) = \\lim_{\\Delta t \\to 0} \\frac{\\Pr(t < T \\le t+\\Delta t\\vert T \\ge t)}{\\Delta t}"
 weib_h = "$\\displaystyle h(t) = \\frac{\\beta}{\\eta}\\left(\\frac{t}{\\eta}\\right)^{\\beta-1}$"
 gen_H = "$\\displaystyle H(t) = \\int_{0}^{t} h(u)du$"
 weib_H = "$\\displaystyle H(t) = \\left(\\frac{t}{\\eta}\\right)^{\\beta}$"
-weib_q = "$\\displaystyle t(p) = \\eta\\left(\\ln\\left[\\frac{1}{1 - p}\\right]\\right)^{1/\\beta}$"
+weib_q = "t(p) = \\eta\\left(\\ln\\left[\\frac{1}{1 - p}\\right]\\right)^{1/\\beta}"
 ```
 
 ```{r, echo=FALSE}
@@ -325,7 +342,7 @@ h = (sh / sc) * (t / sc) ^ (sh - 1)
 
 .panelset[
 
-.panel[.panel-name[Probability Density Function]
+.panel[.panel-name[Probability Density Function - PDF]
 
 .pull-left[
 
@@ -345,7 +362,7 @@ highchart() %>%
 
 .pull-right[
 
-The probability density function (aka the density function, or simply the density) defines the probability that the random variable $T$ is equal to $t$
+The probability density function (aka density function, or just density) defines the probability that the R.V. <span class="mjx-char MJXc-TeX-math-I" style="display:inline;">T</span> is equal to <span class="mjx-char MJXc-TeX-math-I" style="display:inline;">t</span>.
 
 $$
 f(t) = \Pr(T = t)
@@ -360,7 +377,7 @@ $$
 ] <!--end .pull-right -->
 ]
 
-.panel[.panel-name[Cumulative Distribution Function]
+.panel[.panel-name[Cumulative Distribution Function - CDF]
 
 .pull-left[
 
@@ -380,19 +397,19 @@ highchart() %>%
 
 .pull-right[
 
-The cumulative distribution function (CDF) defines the total probability that the random variable $T$ is equal to or less than $t$
+The CDF is formally defined as the cumulative probability that the R.V. <span class="mjx-char MJXc-TeX-math-I" style="display:inline;">T</span> is equal to or less than <span class="mjx-char MJXc-TeX-math-I" style="display:inline;">t</span>
 
 $$
 F(t) = \Pr(T \le t)
 $$
 
-The CDF is equal to the area under the curve of the density function for any value $t$ - Mathematically, the relationship between the CDF and the PDF is 
+Less formally, <span class="mjx-char MJXc-TeX-math-I" style="display:inline;">F(t)</span> is equal to the area under the curve of the density function in the interval <span class="mjx-char MJXc-TeX-math-I" style="display:inline;">[0,t]</span>, i.e. 
 
 $$
 F(t) = \int_{0}^{t}f(u)du
 $$
 
-- The CDF for the Weibull distribution is expressed as 
+The Weibull CDF is expressed as 
 
 $$
 `r weib_F`
@@ -410,7 +427,9 @@ knitr::include_graphics("images/cdf_pdf.gif")
 ] <!--end .panelset -->
 
 ---
-## Distribution Functions - CDF & Survival
+## Distribution Functions - Survival
+
+.panelset[.panel[.panel-name[Survival Function]
 
 .pull-left[
 
@@ -438,61 +457,236 @@ highchart() %>%
 
 .pull-right[
 
-The cumulative distribution function (CDF) defines the total probability that the random variable $T$ is equal to or less than $t$
+The survival function (aka reliability function, or complementary CDF) is formally defined as the probability that the R.V. <span class="mjx-char MJXc-TeX-math-I" style="display:inline;">T</span> is greater than <span class="mjx-char MJXc-TeX-math-I" style="display:inline;">t</span>
 
- survival function          
+$$
+S(t) = \Pr(T > t) = 1-F(t)
+$$
+
+Less formally, the survival function is equal to the area under the curve of the density function in the interval <span class="mjx-char MJXc-TeX-math-I" style="display:inline;">(t,&infin;)</span>, i.e.
+
+$$
+S(t) = \int_{t}^{\infty}f(u)du
+$$
+
+The Weibull survival function is expressed as 
+
+$$
+`r weib_R`
+$$
 
 ] <!--end .pull-right -->
+] <!--end .panel      -->
 
-
----
-## Distribution Functions - CDF & Quantile
+.panel[.panel-name[PDF/Survival Relationship]
 
 ```{r, echo=FALSE}
-hc1 <- highchart() %>%
-  hc_add_series(data = dplyr::filter(.DDD,Func == "CDF"),
-                type = "line",
-                mapping = hcaes(x = time, y = vals),
-                name = "CDF",
-                tooltip = list(pointFormat = "F(t): {point.vals}"),
-                id = 1) %>%
-  hc_xAxis(type = 'linear',
-           crosshair = T,
-           title = list(text = "Time t"),
-           min = 0, max = 350) %>%
-  hc_yAxis(type = "linear",
-           crosshair = T,
-           title = list(text = "F(t)"),
-           min = 0, max = 1)
+knitr::include_graphics("images/surv_pdf.gif")
+```
 
-hc2 <- highchart() %>%
+] <!--end .panel      -->
+] <!--end .panelset   -->
+
+---
+## Distribution Functions - Quantile
+
+.panelset[.panel[.panel-name[Quantile Function]
+
+.pull-left[
+```{r, echo=FALSE}
+hc2 <- highchart(height = 400,
+                 width = 440) %>%
   hc_add_series(data = dplyr::filter(.DDD,Func == "CDF"),
                 type = "line",
-                mapping = hcaes(y = time, x = vals), 
-                name = "Quantile", 
-                tooltip = list(pointFormat = "t(p): {point.time}"),
-                linkedTo = 1) %>%
+                mapping = hcaes(y = time, x = vals),
+                name = NA,#"Quantile",
+                tooltip = list(pointFormat = "t(p): {point.time}")) %>%
   hc_xAxis(type = 'linear',
            crosshair = T,
-           title = list(text = "Probability"),
+           title = list(text = "Probability (p)"),
            min = 0, max = 1) %>%
   hc_yAxis(type = "linear",
            crosshair = T,
            title = list(text = "t(p)"),
            min = 0,
-           max = 350)
+           max = 320) %>%
+  hc_title(text = "Quantile Function t(p)")
+
+hc2
+```
+]
+
+.pull-right[
+
+The Quantile function (aka the percent point function) is formally defined as the realization of the R.V. <span class="mjx-char MJXc-TeX-math-I" style="display:inline;">T</span> that corresponds to the probability <span class="mjx-char MJXc-TeX-math-I" style="display:inline;">p</span>
+
+$$
+t(p)=\inf \Big\\{t\in\mathbb{R} :p\leq F(t)\Big\\}
+$$
+
+The quantile function is the inverse of the CDF
+
+$$
+t(p) = F^{-1}(t)
+$$
+
+The Weibull quantile function is expressed as 
+
+$$
+`r weib_q`
+$$
+
+The quantile function is used for setting warranty periods as the time at which X% of units are expected to fail
+]
+]
+
+.panel[.panel-name[Quantile CDF Relationship]
+
+```{r}
+hc1 <- highchart(height = 400,
+                 width = 440) %>%
+  hc_add_series(data = dplyr::filter(.DDD,Func == "CDF"),
+                type = "line",
+                mapping = hcaes(x = time, y = vals),
+                name = NA,#"CDF",
+                tooltip = list(pointFormat = "F(t): {point.vals}")) %>%
+  hc_xAxis(type = 'linear',
+           crosshair = T,
+           title = list(text = "Time (t)"),
+           min = 0, max = 400) %>%
+  hc_yAxis(type = "linear",
+           crosshair = T,
+           title = list(text = "F(t)"),
+           min = 0, max = 1) %>%
+hc_title(text = "Distribution Function F(t)")
 
 hw_grid(hc1,hc2, ncol = 2)
 ```
 
-<!-- failure rate, hazard rate  -->
-<!-- inverse CDF, percent point --> 
-<!-- Cumulative hazard rate -->
+]
+
+.panel[.panel-name[Weibull Scale Parameter]
+
+.pull-left[
+
+The quantile function is closely related to warranty periods as it is used to estimate the time at which $X\%$ of units are expected to fail
+
+The Weibull scale parameter $\eta$ is sometimes called the "characteristic life" parameter as it equates to a specific quantile value
+
++ The scale parameter has the same units as $t$ 
++ Setting $t = \eta$ in the Weibull CDF shows that $F(t=\eta|\eta,\beta) \approx 0.632$
++ This result does not depend on the value of $\eta$ or $\beta$
+
+]
+
+.pull-right[
+
+$$
+\begin{aligned}
+F(t = \eta|\eta,\beta) &= 1 - \exp\bigg[-\bigg(\frac{\eta}{\eta}\bigg)^{\beta}\bigg]\\\\
+ &= 1 - \exp\bigg[-\bigg(1\bigg)^{\beta}\bigg]\\\\
+&=1-\exp\bigg[-1\bigg]\\\\
+&=1-`r round(exp(-1), dig=3)`\\\\
+&=`r 1-round(exp(-1), dig=3)`
+\end{aligned}
+$$
+
+]
+]
+]
+
+---
+## Distribution Functions - Hazard
+
+.panelset[.panel[.panel-name[Hazard Function]
+
+.pull-left[
+
+```{r, echo=FALSE}
+highchart() %>%
+  hc_add_series(data = dplyr::filter(.DDD,Func == "Hazard"),
+                type = "line",mapping = hcaes(x = time, y = vals), name = "CDF", tooltip = list(pointFormat = "h(t): {point.vals}")) %>%
+  hc_xAxis(type = 'linear', 
+           crosshair = T, 
+           title = list(text = "Time t")) %>%
+  hc_yAxis(type = "linear", 
+           crosshair = T, 
+           title = list(text = "h(t)")) 
+```
+
+]
+
+.pull-right[
+
+The <span class="explain">hazard function</span><span class="tooltip"> aka the hazard rate function or failure rate function</span> is formally defined as the conditional probability that the R.V. <span class="mjx-char MJXc-TeX-math-I" style="display:inline;">T</span> falls in some interval <span class="mjx-char MJXc-TeX-math-I" style="display:inline;">t + &#916;t</span>
+
+$$
+`r gen_h`
+$$
+
+The hazard function is equal to the ratio of the PDF and the survival function
+
+$$
+h(t) = f(t) / S(t)
+$$
+
+Looking at the Weibull PDF, we see both the hazard function and the survival function 
+
+$$
+f(t) = \redbf{\frac{\beta}{\eta}\left(\frac{t}{\eta}\right)^{\beta-1}}\bluebf{\exp\left[-\left(\frac{t}{\eta}\right)^{\beta}\right]}
+$$
+
+]
+]
+
+.panel[.panel-name[PDF/Survival/Hazard Relationship]
+
+```{r, echo=FALSE}
+knitr::include_graphics("images/gifs/surv_pdf_haz.gif")
+```
+
+]
+]
+
+---
+## Weibull Distribution Parameters
+
+.panelset[.panel[.panel-name[Shape Parameter &#x03B2;]
+
+The shape parameter determines the variance of the Weibull distribution and impacts the shape of all of the functions
+
+When $0 < \beta < 1$
+
+- The most probable observation is $0$ and steeply decreases before leveling out
+
+When $\beta = 1$ 
+
+- The distribution is equivalent to the exponential distribution
+- The hazard rate is constant as the distribution shares the memoryless property
+
+When $1 < \beta < 2$
+
+
+]
+
+.panel[.panel-name[Impact of &#x03B2; on Weibull functions]
+
+```{r, echo=FALSE}
+knitr::include_graphics("images/weib_beta_haz1.gif")
+```
+
+
+
+]
+
+
+
+]
 
 ---
 ## Distribution Function Table
 
-Each cell in the table below shows the expressions used to transform from the function at the top to the function on the left 
+Each cell in the table shows the expressions used to transform from the function at the top to the function on the left 
 
 
 |      | $F(t)$                   | $f(t)$                              | $S(t)$                 | $h(t)$                               | $H(t)$|
@@ -507,10 +701,10 @@ Each cell in the table below shows the expressions used to transform from the fu
 ---
 class: inverse, left, bottom, hide_logo
 
-# Overview of Probability Plots
+# Probability Plotting
 
 ---
-# Probability Plotting
+# Overview of Probability Plotting
 
 Probability plotting is a graphical method of fitting data to a chosen univariate probability model
 
@@ -534,7 +728,7 @@ If the plotted points fall "roughly" on a straight line, the distribution provid
 The parameter values (i.e. slope and intercept) of the best fit line can be determined by graphical estimation, least squares optimization, or maximum likelihood estimation
 
 ---
-### How to linearize the Weibull CDF
+## How to linearize the Weibull CDF
 
 .panelset[
 .panel[.panel-name[Step 1]
@@ -638,9 +832,7 @@ $$
 ]
 ]
 ---
-class: inverse, left, bottom, hide_logo
-
-
+class: inverse, left, bottom, hide_logo                                                                                                                                  
 # Elements of Weibull Plots
 
 ---
@@ -655,7 +847,7 @@ knitr::include_graphics(file.path(root, "images"  ,"build_weibull","points.png")
 ]
 
 .pull-right[
-<br/>
+<br/><br/>
 <red>Plotted Points representing the "observed unreliabilities"</red>
 
 - <red>X-axis:</red> $\redbf{t_i, i = 1,2,\ldots,N}$<br/> <red>ordered event times</red>
@@ -684,6 +876,7 @@ Plotted Points
 <red>Axes: transformed according to a <u>linearized Weibull CDF</u></red>
 
 ]
+
 
 ---
 ## Elements of Weibull Plots
@@ -745,10 +938,10 @@ Best fit line representing the predicted values from the Weibull model
 ]
 
 ---
-## Two methods for generating Weibull plots
+## Methods for generating Weibull plot axes
 
 .panelset[
-.panel[.panel-name[Method 1: Transform the data (linearize the CDF)]
+.panel[.panel-name[Linear (true) axes]
 
 .pull-left[
 
@@ -760,7 +953,7 @@ knitr::include_graphics(file.path(root, "images"  ,"build_weibull","both_axes_2-
 
 .pull-right[
 
-- In this method the nonparametric estimate of the CDF and the event times are transformed as shown below 
+- In this method the nonparametric estimate of the CDF and the event times are transformed according to the linearized Weibull CDF 
 
 $$
 \begin{aligned}
@@ -769,16 +962,16 @@ g(t) &= \ln[t]
 \end{aligned}
 $$
 
-- These transformed values are plotted on the "true", untransformed axes 
+- These values are plotted on linear axes 
 
-- The advantage of the method is that the transformed values can be used to estimate the parameters $\eta$ and $\beta$
+- The advantage is that values plotted on these axes can be used to graphically estimate $\eta$ and $\beta$
 
-- The disadvantage of this method is that isn't always user friendly
+- The disadvantage is that the viewer may not understand what the values along the y-axis mean
 
 ]
 ]
 
-.panel[.panel-name[Method 2: Transforming the axes]
+.panel[.panel-name[Transformed (not so true) axes]
 
 .pull-left[
 ```{r}
@@ -787,41 +980,98 @@ knitr::include_graphics(file.path(root, "images"  ,"build_weibull","both_axes_1-
 ]
 
 .pull-right[
-- In this method the axes are "untransformed" by replacing the "true" y-axis values with their corresponding unreliabilities
+This method has been popularized through the use of <a target="_blank" href="https://www.weibull.com/GPaper/">**Weibull Plotting papers**</a>
 
-- The advantage of this method is that the raw failure times and nonparametric estimates can be plotted directly  
+Note the values on the second y-axis (right side) - these values <span class="explain">correspond to failure probabilities</span><span class="tooltip">Examples:<br/>
+$$
+\begin{aligned}
+1.933 &\approx \log\bigg[\log\bigg[\frac{1}{1-0.999}\bigg]\bigg]\\\\
+-5.296 &\approx \log\bigg[\log\bigg[\frac{1}{1-0.005}\bigg]\bigg]
+\end{aligned}
+$$
+</span> (left side) that have been transformed according to the linearized Weibull CDF
 
-- The disadvantage of this method is that the values cannot be used to estimate the parameters $\eta$ and $\beta$ 
+This method <span class="explain">overwrites the true y-axis values</span><span class="tooltip">For example, 1.933 is overwritten with 0.999<br/><br/>As result, the y-axis on Weibull plots appears to be logarithmic - but it's really a linear axis with some clever hand waving `r fontawesome::fa_i("hand-paper", class="faa-wrench animated")`</span> with their corresponding probabilities
 
-- This method is used often and has been popularized through the use of <a target="_blank" href="https://www.weibull.com/GPaper/">**Plotting papers `r fontawesome::fa_i("external-link-alt")`**</a> 
+- The advantage of this method is that the raw failure times and nonparametric estimates can be plotted directly and the resulting plot is more easily interpretable 
+
+- The disadvantage of this method is that the plotted points cannot be used to graphically estimate value of the shape parameter $\beta$ 
+
 ]
 ]
 ]
----
-# Options for the 
-
-The nonparametric estimate of the CDF $\widehat{F}$, or the unreliability, plays a key role in probability plotting
-
-However, one cannot observe reliability or unrealiability values -- only observe failures or suspensions 
-
-Reliability or unreliability values must be estimated from the data 
-
-The following slides discuss several estimators that are used to compute these values  
-
-- Plotting positions
-
-- The Kaplan-Meier estimator (aka the product limit estimator)
-
-- The Turnbull Estimator
-
-The choice of which estimator to use is driven by the type censoring (suspensions) present in the data
 
 ---
-# Probability Plotting Positions
+## Generating the plotted points
 
-Plotting positions express the non-exceedance probability $F$ of the $i^{th}$ ascending data value
+.panelset[
 
-Various formulae have been developed to compute these probabilities for use with a chosen distribution
+.panel[.panel-name[Overview]
+
+Regardless of how the axes are drawn, the plotted points are computed in a similar manner
+
+- X-axis: observed event times (failure, suspension, or other event)
+- Y-axis: nonparametric estimate of the failure probability (CDF) at the observed event times
+
+The nonparametric estimate of the CDF $\widehat{F}$ plays a key role in probability plotting
+
+- One cannot observe the reliability or unreliability of a item - events are the only observable source of information
+- Reliability or unreliability values must be estimated from the data 
+- The following panels discuss some considerations for computing the values of the plotted points
+
+]
+
+.panel[.panel-name[X-coordinates]
+
+.pull-left[
+
+The x-coordinate of each plotted point is determined by how the observed event is categorized
+
+- Exact failure: "exact" failure time observed $t_f = t$
+- Left censored: failure is discovered at first inspection - exact failure time not known $t_f \in (0,t_{1})$
+- Interval censored: failure occurs between inspections and is discovered at inspection $i=2,\cdots,n$ - exact failure time not known $t_f \in (t_{i},t_{i+1}), i > 0$
+- Right censored: failure not observed at final $n^{th}$ inspection - exact failure time not known $t_f \in (t_{n},\infty)$
+
+Data sets that include only exact failures are called complete data sets
+
+]
+
+.pull-right[
+
+```{r, echo=FALSE}
+knitr::include_graphics("images/censored2.png")
+```
+
+]
+]
+
+.panel[.panel-name[Y-coordinates]
+
+As previously stated, the y-coordinates of the plotted points are nonparametric estimates of the CDF corresponding to the observed event times 
+
+Many different estimators have been developed for this purpose, the choice of which estimator to use is driven by the type of censoring (suspensions) present in the data
+
+- Estimators for complete data sets
+
+    + Median-Ranks plotting position
+    + Hazen plotting position
+    + Weibull plotting position
+
+- Estimators for right censored data sets
+
+    + Kaplan-Meier estimator (aka the product limit estimator)
+    + Modified median-ranks estimator
+
+- Estimators for data with generalized censoring
+
+    + Turnbull's Estimator
+    + Generalized Kaplan-Meier estimator
+
+]
+
+.panel[.panel-name[Plotting Positions]
+
+Probability plotting positions express the non-exceedance probability of the CDF for the $i^{th}$ ascending data value
 
 The generic plotting position formula is expressed as
 
@@ -831,45 +1081,25 @@ $$
 
 - where
 
-    + $i$ is an index of the ordered observations (smallest $\rightarrow$largest)
-    
+    + $i$ is an index of the ordered observations (smallest $\rightarrow$ largest)
     + $n$ is the number of observations
+    + $a$ is the <span class="explain">plotting position parameter</span><span class="tooltip">The value of $a$ is chosen to produce approximately unbiased estimates of $F(t_{i})$ for an assumed distribution</span>
 
-    + $a$ is the plotting position parameter
-
-    + $\widehat{F(t_{i})}$ is the nonparametric estimate of the CDF at time $t_{i}$
-
----
-## Probability Plotting Positions 
-
-The value of $a$ is chosen to produce approximately unbiased estimates of $F(t_{i})$ for an assumed distribution
-
-.pull-left[
-
-Author     | Year | $a$   |   Formula
------------|------|-------|---------------
-Hazen      | 1914 | 0.50  | $\displaystyle\frac{i-0.5}{n}$
-Weibull    | 1939 | 0     | $\displaystyle\frac{i}{n+1}$
-Blom       | 1958 | 0.375 | $\displaystyle\frac{i-0.375}{n+0.25}$
-Gringorten | 1963 | 0.44  | $\displaystyle\frac{i-0.44}{n+0.12}$
-Chegodayev | 2000 | 0.30  | $\displaystyle\frac{i-0.30}{n+0.4}$
-Cunnane    | 1977 | 0.40  | $\displaystyle\frac{i-0.40}{n+0.2}$
-Median     | 1943 | 0.3175| $\displaystyle\frac{i-0.3175}{n+0.365}$
-
-]
-
-.pull-right[
-
-<h4>The plotting positions used most often in practice are</h4>
-
+Various formulae <span class="explain">have been developed</span> <span class="tooltip">
+<br/>
+The formulae used most often in practice are:
+<br/>
 $$
 \begin{aligned}
-\text{Hazen}:\; &\widehat{F(t_{i})}=\frac{i-0.5}{n}\\\\
-\text{Chegodayev}:\; &\widehat{F(t_{i})}=\frac{i-0.3}{n+0.4}\;\text{also known as "Median-Ranks"}\\\\
-\text{Weibull}:\; &\widehat{F(t_{i})}=\frac{i}{n+1}\\\\
+\text{Hazen }(a = 0.5):\; &\widehat{F(t_{i})}=\frac{i-0.5}{n}\\\\
+\text{Chegodayev }(a = 0.3):\; &\widehat{F(t_{i})}=\frac{i-0.3}{n+0.4}\\\\
+\text{Weibull }(a = 0):\; &\widehat{F(t_{i})}=\frac{i}{n+1}\\\\
 \end{aligned}
 $$
+Note: the Chegodayev plotting position is also known as "Median-Ranks"
+</span> to correspond with specific distributions
 
+]
 ]
 
 ---
@@ -938,7 +1168,7 @@ class: inverse, left, bottom, hide_logo
 
 - For failure data, each observation makes one of four contributions to the likelihood function
 
-$$\mathscr{L}_{i}(\underline{\theta}|t_{i})=\begin{cases} S(t_{i}) &\mbox{for a right censored observation}\\\\F(t_{i}) &\mbox{for a left censored observation}\\\\F(t_{i})-F(t_{i-1}) &\mbox{for an interval censored observation}\\\\\lim\limits_{\Delta_i\rightarrow 0} \frac{(F(t_{i})-\Delta_{i})-F(t_{i})}{\Delta_{i}} &\mbox{for an "exact" observation}\end{cases}$$
+$$\mathscr{L}_{i}(\underline{\theta}|t_{i})=\begin{cases} S(t_{i}) &\mbox{for a right censored observation}\\F(t_{i}) &\mbox{for a left censored observation}\\F(t_{i})-F(t_{i-1}) &\mbox{for an interval censored observation}\\\lim\limits_{\Delta_i\rightarrow 0} \frac{(F(t_{i})-\Delta_{i})-F(t_{i})}{\Delta_{i}} &\mbox{for an exact" observation}\end{cases}$$
 
 - Thus, the total likelihood function may be expressed as
 
@@ -952,6 +1182,26 @@ $$\mathscr{L}(\underline{\theta}|\underline{t})=C\prod_{i=1}^{n} \mathscr{L}_{i}
     + $r_i=1$ if $t_i$ is a right censored observation (0 otherwise)
     + $n = \sum_{j=1}^{m+1}(l_{j}+d_{j}+r_{j})$
 
+---
+## Example data
+
+.panelset[
+  .panel[.panel-name[Overview]
+  
+This is some text 
+  ]
+
+.panel[.panel-name[Data]
+
+]
+
+.panel[.panel-name[Likelihood Function]
+
+]
+
+.panel[.panel-name[Likelihood Surface]
 
 
 
+]
+]
