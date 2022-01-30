@@ -1,0 +1,406 @@
+---
+title: "Introduction to Weibull Analysis"
+#author: "Jason Freels"
+date: "`r format(Sys.Date(), '%d %b %Y')`"
+output:
+  xaringan::moon_reader:
+    css: ["default",
+          "css/xaringan.css",
+          "css/font-awesome-animation.min.css"]
+    self_contained: true
+    lib_dir: libs
+    chakra: libs/remark-latest-min.js
+    seal: no
+    nature:
+      ratio: '16:9'
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+      
+    yolo: false
+---
+class: inverse, left, bottom, hide_logo
+background-image: url("images/rso.png")
+background-position: 10% 10%;
+
+background-size: 50px
+
+# Introduction to Weibull Analysis
+
+## `r format(Sys.Date(), '%d %b %Y')`
+
+```{r setup, include=FALSE, cache=FALSE}
+# Set global R options
+options(htmltools.dir.version = FALSE, servr.daemon = TRUE)
+# Set global knitr chunk options
+knitr::opts_chunk$set(
+  fig.align = "center",
+  cache = !TRUE,
+  error = FALSE,
+  message = FALSE,
+  warning = FALSE,
+  collapse = TRUE ,
+  echo = F
+)
+# set ggplot to black and white theme
+library(highcharter)
+library(xaringanExtra)
+xaringanExtra::use_panelset()
+library(ggplot2)
+library(plotly)
+library(SMRD)
+library(anicon)
+theme_set(theme_bw())
+#library(SMRD)
+root = rprojroot::find_root(rprojroot::is_git_root)
+```
+
+```{r xaringan-logo, echo=FALSE, eval=!FALSE}
+xaringanExtra::use_logo(
+  image_url = "https://pbs.twimg.com/profile_images/1242553053519073281/X2fHgMX9_400x400.jpg",
+  width = "60px",
+  height = "60px",
+  position = css_position(bottom = "2em", right = "0.75em"),
+  exclude_class = c("hide_logo")
+)
+```
+
+---
+## Test icon
+
+- This should be a finger pointing up (bouncing) <span class="faa-bounce animated" style="display: -moz-inline-stack; display: inline-block; transform: rotate(0deg);"><img src="☝" style="height:1em; width:auto;"></span>
+
+- <span class="faa-bounce animated" style="display: -moz-inline-stack; display:inline-block; transform rotate(0deg);"><img src="☝" style="height:1em; width: auto;"></span>
+
+-  `r anicon::cia("\u261d", animate = "bounce")`
+
+-  `r anicon::cia("☝", animate = "bounce")`
+
+- <span class="faa-bounce animated" style="display: -moz-inline-stack; display: inline-block; transform: rotate(0deg);"><img src="\u261d" style="height:1em; width:auto;"></span>
+
+- `r fontawesome::fa_i("hand-point-up", class="faa-bounce animated")`
+
+- `r fontawesome::fa_i("hand-paper", class="faa-wrench animated")`
+
+- `r fontawesome::fa_i("hand-paper", class="faa-wave animated")`
+
+<span id="MathJax-Element-53-Frame" class="mjx-chtml MathJax_CHTML">T</span>
+
+<math xmlns="http://www.w3.org/1998/Math/MathML">F</math>
+
+---
+## Distribution Functions - PDF & CDF
+
+```{r, echo=FALSE}
+weib_F = "F(t) = 1-\\exp\\left[-\\left(\\frac{t}{\\eta}\\right)^{\\beta}\\right]"
+weib_f = "f(t) = \\frac{\\beta}{\\eta}\\left(\\frac{t}{\\eta}\\right)^{\\beta-1}\\exp\\left[-\\left(\\frac{t}{\\eta}\\right)^{\\beta}\\right]"
+weib_R = "S(t) = \\exp\\left[-\\left(\\frac{t}{\\eta}\\right)^{\\beta}\\right]"
+gen_h = "$\\displaystyle h(t) = \\lim_{\\Delta t \\to 0} \\frac{\\Pr(t < T \\le t+\\Delta t\\vert T \\ge t)}{\\Delta t}$"
+weib_h = "$\\displaystyle h(t) = \\frac{\\beta}{\\eta}\\left(\\frac{t}{\\eta}\\right)^{\\beta-1}$"
+gen_H = "$\\displaystyle H(t) = \\int_{0}^{t} h(u)du$"
+weib_H = "$\\displaystyle H(t) = \\left(\\frac{t}{\\eta}\\right)^{\\beta}$"
+weib_q = "$\\displaystyle t(p) = \\eta\\left(\\ln\\left[\\frac{1}{1 - p}\\right]\\right)^{1/\\beta}$"
+```
+
+```{r, echo=FALSE}
+sh = 2.1
+sc = 150
+t = seq(0,350, 0.5)
+p = pweibull(t, sh = sh, sc = sc)
+d = dweibull(t, sh = sh, sc = sc)
+s = 1-pweibull(t, sh = sh, sc = sc)
+q = qweibull(p, sh = sh, sc = sc)
+h = (sh / sc) * (t / sc) ^ (sh - 1)
+
+.DDD <- data.frame(time = rep(t, 5),
+                   Func = rep(c("CDF","PDF","Survival","Quantile","Hazard"),each = length(t)),
+                   vals = c(p,d,s,q,h)) 
+```
+
+.panelset[
+
+.panel[.panel-name[Probability Density Function - PDF]
+
+.pull-left[
+
+```{r, echo=FALSE}
+highchart() %>%
+  hc_add_series(data = dplyr::filter(.DDD,Func == "PDF"),
+                type = "line",mapping = hcaes(x = time, y = vals), name = "CDF", tooltip = list(pointFormat = "f(t): {point.vals}")) %>%
+  hc_xAxis(type = 'linear', 
+           crosshair = T, 
+           title = list(text = "Time t")) %>%
+  hc_yAxis(type = "linear", 
+           crosshair = T, 
+           title = list(text = "f(t)")) 
+```
+
+]
+
+.pull-right[
+
+The probability density function (aka density function, or just density) defines the probability that the R.V. $T$ is equal to $t$.
+
+$$
+f(t) = \Pr(T = t)
+$$   
+
+The PDF for the Weibull distribution is expressed as 
+
+$$
+`r weib_f`
+$$
+
+] <!--end .pull-right -->
+]
+
+.panel[.panel-name[Cumulative Distribution Function - CDF]
+
+.pull-left[
+
+```{r, echo=FALSE}
+highchart() %>%
+  hc_add_series(data = dplyr::filter(.DDD,Func == "CDF"),
+                type = "line",mapping = hcaes(x = time, y = vals), name = "CDF", tooltip = list(pointFormat = "F(t): {point.vals}")) %>%
+  hc_xAxis(type = 'linear', 
+           crosshair = T, 
+           title = list(text = "Time t")) %>%
+  hc_yAxis(type = "linear", 
+           crosshair = T, 
+           title = list(text = "F(t)"), max = 1) 
+```
+
+]
+
+.pull-right[
+
+The CDF is formally defined as the cumulative probability that the R.V. <span class="mjx-char MJXc-TeX-math-I" style="display:inline;">T</span> is equal to or less than <span class="mjx-char MJXc-TeX-math-I" style="display:inline;">t</span>
+
+$$
+F(t) = \Pr(T \le t)
+$$
+
+Less formally, $F(t)$ is equal to the area under the curve of the density function in the interval $[0,t]$, i.e. 
+
+$$
+F(t) = \int_{0}^{t}f(u)du
+$$
+
+The Weibull CDF is expressed as 
+
+$$
+`r weib_F`
+$$
+
+] <!--end .pull-right -->
+] <!--end .panel -->
+
+.panel[.panel-name[CDF/PDF Relationship]
+
+```{r, echo=FALSE}
+knitr::include_graphics("images/cdf_pdf.gif")
+```
+]
+] <!--end .panelset -->
+
+
+---
+## stuff
+
+- <span class="mjx-char MJXc-TeX-math-I" style="padding-top: 0.472em; padding-bottom: 0.259em; padding-right: 0.106em;">F</span>
+
+- <span class="mjx-char MJXc-TeX-math-I" style="padding-top: 0.472em; padding-bottom: 0.259em; padding-right: 0.106em;">(t,&infin;)</span>
+
+
+---
+## Generating the plotted points
+
+.panelset[
+
+.panel[.panel-name[Overview]
+
+Regardless of how the axes are drawn, the plotted points are computed in a similar manner
+
+- X-axis: observed event times (failure, suspension, or other event)
+- Y-axis: nonparametric estimate of the failure probability (CDF) at the observed event times
+
+The nonparametric estimate of the CDF $\widehat{F}$ plays a key role in probability plotting
+
+- One cannot observe the reliability or unreliability of a item - events are the only observable source of information
+- Reliability or unreliability values must be estimated from the data 
+- The following panels discuss some considerations for computing the values of the plotted points
+
+]
+
+.panel[.panel-name[X coordinates]
+
+.pull-left[
+
+The x-coordinate of each plotted point is determined by how the observed event is categorized
+
+- Exact failure: "exact" failure time observed $t_f = t$
+- Left censored: failure is discovered at first inspection - exact failure time not known $t_f \in (0,t_{1})$
+- Interval censored: failure occurs between inspections and is discovered at inspection $i=2,\cdots,n$ - exact failure time not known $t_f \in (t_{i},t_{i+1}), i > 0$
+- Right censored: failure not observed at final $n^{th}$ inspection - exact failure time not known $t_f \in (t_{n},\infty\right)$
+
+Data sets that include only exact failures are called complete data sets
+
+]
+
+.pull-right[
+
+```{r, echo=FALSE}
+par(family = 'serif', font = 2, mar = c(5.1, 4.1, 1.1, 2.1))
+
+curve(dweibull(x, shape = 1.7, scale = 1),
+      lwd = 2,
+      las = 1, 
+      xlim = c(0,2.5),
+      xlab = 'Time (t)',
+      ylab = 'f(t)',
+      n = 300)
+
+polygon(x = c(seq(0,.5,.01),.5),
+        y = c(dweibull(seq(0,.5,.01),shape = 1.7,scale = 1),0),
+        col = 1)
+polygon(x = c(1,seq(1,1.5,.01),1.5),
+        y = c(0,dweibull(seq(1,1.5,.01),shape = 1.7,scale = 1),0),
+        col = 1)
+polygon(x = c(2,seq(2,2.5,.01),2.5),
+        y = c(0,dweibull(seq(2,2.5,.01),shape = 1.7,scale = 1),0),
+        col = 1)
+
+text(x = c(.16,1.3,2.2),
+     y = c(.75,.65,.15),
+     labels = c('Left Censoring',
+                'Interval Censoring',
+                'Right Censoring'))
+```
+
+]
+]
+
+
+.panel[.panel-name[Y coordinates]
+
+As previously stated, the y-coordinates of the plotted points are nonparametric estimates of the CDF corresponding to the observed event times 
+
+Many different estimators have been developed for this purpose, some of which are
+
+- Plotting position estimators
+
+- Kaplan-Meier estimator (aka the product limit estimator)
+
+- Turnbull Estimator
+
+The choice of which estimator to use is driven by the type censoring (suspensions) that present in the data
+
+]
+
+.panel[.panel-name[Plotting Positions]
+
+Probability plotting positions express the non-exceedance probability of the CDF for the $i^{th}$ ascending data value
+
+The generic plotting position formula is expressed as
+
+$$
+\widehat{F(t_{i})}=\frac{i-a}{n+1-2a}
+$$
+
+- where
+
+    + $i$ is an index of the ordered observations (smallest $\rightarrow$ largest)
+    + $n$ is the number of observations
+    + $a$ is the <span class="explain">plotting position parameter</span><span class="tooltip">The value of $a$ is chosen to produce approximately unbiased estimates of $F(t_{i})$ for an assumed distribution</span>
+
+Various formulae <span class="explain">have been developed</span> <span class="tooltip">
+<br/>
+Author     | Year | $a$   |   Formula
+-----------|------|-------|---------------
+Hazen      | 1914 | 0.50  | $\displaystyle\frac{i-0.5}{n}$
+Weibull    | 1939 | 0     | $\displaystyle\frac{i}{n+1}$
+Blom       | 1958 | 0.375 | $\displaystyle\frac{i-0.375}{n+0.25}$
+Gringorten | 1963 | 0.44  | $\displaystyle\frac{i-0.44}{n+0.12}$
+Chegodayev | 2000 | 0.30  | $\displaystyle\frac{i-0.30}{n+0.4}$
+Cunnane    | 1977 | 0.40  | $\displaystyle\frac{i-0.40}{n+0.2}$
+Median     | 1943 | 0.3175| $\displaystyle\frac{i-0.3175}{n+0.365}$
+<br/>
+The formulae used most often in practice are:
+<br/>
+$$
+\begin{aligned}
+\text{Hazen}:\; &\widehat{F(t_{i})}=\frac{i-0.5}{n}\\\\
+\text{Chegodayev}:\; &\widehat{F(t_{i})}=\frac{i-0.3}{n+0.4}\\\\
+\text{Weibull}:\; &\widehat{F(t_{i})}=\frac{i}{n+1}\\\\
+\end{aligned}
+$$
+<br/>
+Note: the Chegodayev plotting position is also known as "Median-Ranks"
+</span> to correspond with specific distributions
+
+]
+
+]
+
+---
+## table
+
+Author     | Year | $a$   |   Formula
+-----------|------|-------|---------------
+Hazen      | 1914 | 0.50  | $\displaystyle\frac{i-0.5}{n}$
+Weibull    | 1939 | 0     | $\displaystyle\frac{i}{n+1}$
+Blom       | 1958 | 0.375 | $\displaystyle\frac{i-0.375}{n+0.25}$
+Gringorten | 1963 | 0.44  | $\displaystyle\frac{i-0.44}{n+0.12}$
+Chegodayev | 2000 | 0.30  | $\displaystyle\frac{i-0.30}{n+0.4}$
+Cunnane    | 1977 | 0.40  | $\displaystyle\frac{i-0.40}{n+0.2}$
+Median     | 1943 | 0.3175| $\displaystyle\frac{i-0.3175}{n+0.365}$
+
+
+---
+## Distribution Functions - Quantile
+
+.panelset[.panel[.panel-name[Quantile Function]
+
+.pull-left[
+```{r, echo=FALSE}
+hc2 <- highchart(height = 400,
+                 width = 440) %>%
+  hc_add_series(data = dplyr::filter(.DDD,Func == "CDF"),
+                type = "line",
+                mapping = hcaes(y = time, x = vals),
+                name = NA,#"Quantile",
+                tooltip = list(pointFormat = "t(p): {point.time}")) %>%
+  hc_xAxis(type = 'linear',
+           crosshair = T,
+           title = list(text = "Probability (p)"),
+           min = 0, max = 1) %>%
+  hc_yAxis(type = "linear",
+           crosshair = T,
+           title = list(text = "t(p)"),
+           min = 0,
+           max = 320) %>%
+  hc_title(text = "Quantile Function t(p)")
+
+hc2
+```
+]
+
+.pull-right[
+
+The Quantile function (aka the percent point function) is formally defined as the realization of the R.V. <span class="mjx-char MJXc-TeX-math-I" style="display:inline;">T</span> that corresponds to the probability <span class="mjx-char MJXc-TeX-math-I" style="display:inline;">p</span>
+
+$$
+t(p)=\inf\left\{t\in\mathbb{R}:p\leq\;F(t)\right\}
+$$
+
+$$
+t(p)=\inf \Big\\{t\in\mathbb{R}:p\leq\;F(t)\Big\\}
+$$
+
+$$
+t(p)=\inf \{t\in\mathbb{R} p\leq\;F(t)\}
+$$
+
+]
+]
+]
