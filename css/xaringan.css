@@ -3,7 +3,7 @@
     /* initial state */
     display: none;
     position: relative;
-    top: 50%;
+    top:  10%;
     left: 0%;
 }
 .explain {
@@ -59,3 +59,5 @@ div.remark-slide-content { font-family: sans-serif;}
     border: solid 1px black;
     border-radius: 30px;
 }
+
+a { color: blue;}
