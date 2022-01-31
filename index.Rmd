@@ -212,14 +212,15 @@ $$\newcommand\purplebf[1]{\color{purple}{\boldsymbol{#1}}}$$
 Note the navbar above `r fontawesome::fa_i("hand-point-up", class="faa-bounce animated")` 
 
 + Several slides in this presentation include panels that contain more information about a topic
-+ Depending on the browser you're using, the left and right arrow keys may be used to navigate the panels 
-+ Otherwise, you can click the panel title to view the content on that panel
++ Depending on your browser, the left and right arrow keys may be used to navigate the panels 
++ Otherwise, just click the panel title to view the content on that panel
 
 This presentation also includes interactive elements
 
 + <span class="explain">Hoverable text tooltips</span><span class="tooltip">When you hover over these text elements a pop-up window appears to show additional information</span> are shown using red-ish text and a dotted underline
-+ many of the graphs are also interactive, like the one shown to the right these graphs provide additional data when you hover over them
++ Many graphs are also interactive, and display additional data when you hover over them - like the graph on to the right 
 
+For more navigation options press "h" at any time
 ]
 
 .pull-right[
@@ -540,7 +541,6 @@ $$
 `r weib_q`
 $$
 
-The quantile function is used for setting warranty periods as the time at which X% of units are expected to fail
 ]
 ]
 
@@ -577,9 +577,11 @@ The quantile function is closely related to warranty periods as it is used to es
 
 The Weibull scale parameter $\eta$ is sometimes called the "characteristic life" parameter as it equates to a specific quantile value
 
-+ The scale parameter has the same units as $t$ 
-+ Setting $t = \eta$ in the Weibull CDF shows that $F(t=\eta|\eta,\beta) \approx 0.632$
-+ This result does not depend on the value of $\eta$ or $\beta$
+The scale parameter has the same units as $t$ 
+
+Setting $t = \eta$ in the Weibull CDF shows that $F(t=\eta|\eta,\beta) \approx 0.632$
+
+This result does not depend on the value of $\eta$ or $\beta$
 
 ]
 
@@ -634,7 +636,7 @@ $$
 h(t) = f(t) / S(t)
 $$
 
-Looking at the Weibull PDF, we see both the hazard function and the survival function 
+Looking at the Weibull PDF, we see both the <font color="red">hazard function</font> and the <font color="blue">survival</font> function 
 
 $$
 f(t) = \redbf{\frac{\beta}{\eta}\left(\frac{t}{\eta}\right)^{\beta-1}}\bluebf{\exp\left[-\left(\frac{t}{\eta}\right)^{\beta}\right]}
@@ -1055,9 +1057,9 @@ knitr::include_graphics("images/censored2.png")
 
 .panel[.panel-name[Y-coordinates]
 
-As previously stated, the y-coordinates of the plotted points are nonparametric estimates of the CDF corresponding to the observed event times 
+The y-coordinate of each point is a nonparametric estimates of the CDF corresponding to the observed event times 
 
-Many different estimators have been developed for this purpose, the choice of which estimator to use is driven by the type of censoring (suspensions) present in the data
+Many estimators are available for this purpose, the choice of which to use is driven by the type of censoring (suspensions) present in the data
 
 - Estimators for complete data sets
 
