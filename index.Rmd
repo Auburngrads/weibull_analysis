@@ -420,7 +420,9 @@ $$
 
 .panel[.panel-name[CDF/PDF Relationship]
 
-```{r, echo=FALSE}
+<img src="https://lh3.googleusercontent.com/aq3Iw1r5gb3Ixys0Kpk0KEJ29s2rqvE6T9gQp4J58BC8j_ocow6YI83yJ_NneXgEIv1lBTO1VTDlVIxC57FPa73n6rRryOexaEfKOaX4R38onqB9tsOHBIrlq7KEZCtyiyAaJERVDfM=w2400">
+
+```{r, echo=FALSE, eval=FALSE}
 knitr::include_graphics("images/cdf_pdf.gif")
 ```
 ]
@@ -480,7 +482,9 @@ $$
 
 .panel[.panel-name[PDF/Survival Relationship]
 
-```{r, echo=FALSE}
+<img src="https://lh3.googleusercontent.com/pcMb_Q3xwSq8WdHhlD0zyUyVFWjkK_VwT5KZd2BM4FvI0-NoNgMcOAM7mMXupivB5pVQIQ9AbbrtXdlmfS4nPKhK643hxkpozGkcUzsrCaMDoH7M0ME4QeVOOphNfQf4UyJmh8h-QRA=w2400">
+
+```{r, echo=FALSE, eval=FALSE}
 knitr::include_graphics("images/surv_pdf.gif")
 ```
 
@@ -641,7 +645,9 @@ $$
 
 .panel[.panel-name[PDF/Survival/Hazard Relationship]
 
-```{r, echo=FALSE}
+<img src="https://lh3.googleusercontent.com/Zs7zEpXJ664xTQiRTrHzGpUNPPBXQ9HO9y_PAgvwCcuPbGKOEoESBx9l417efoxP1sfXohX-5lPD5PGVudyGmLkbfZl0wddGHRESU5buM5ankgZBZAwn3055eIpJdMN_6kHc-BiemYM=w2400">
+
+```{r, echo=FALSE, eval=FALSE}
 knitr::include_graphics("images/gifs/surv_pdf_haz.gif")
 ```
 
@@ -671,7 +677,7 @@ When $1 < \beta < 2$
 
 .panel[.panel-name[Impact of &#x03B2; on Weibull functions]
 
-<iframe src="https://github.com/Auburngrads/weibull_analysis/blob/main/images/weib_beta_haz1.gif"></iframe>
+<img src="https://lh3.googleusercontent.com/tMxB5j8MxYNzRtTYoG2-uAmhk-QV9L30uLlolFwiHesMtjbq5Kgklb4PtMDVPVqsOqfIUTD--EtarrsNYcCvLpVh7qE5tZ4-5hi5oQAvfd1Ve18_9hdE9DoWvUcSm_i0Tw3O-E92Dj0=w2400">
 
 ```{r, echo=FALSE, eval=FALSE}
 knitr::include_graphics("images/weib_beta_haz1.gif")
