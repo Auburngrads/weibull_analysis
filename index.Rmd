@@ -671,7 +671,9 @@ When $1 < \beta < 2$
 
 .panel[.panel-name[Impact of &#x03B2; on Weibull functions]
 
-```{r, echo=FALSE}
+<iframe src="https://github.com/Auburngrads/weibull_analysis/blob/main/images/weib_beta_haz1.gif"></iframe>
+
+```{r, echo=FALSE, eval=FALSE}
 knitr::include_graphics("images/weib_beta_haz1.gif")
 ```
 
