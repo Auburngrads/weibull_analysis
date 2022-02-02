@@ -218,7 +218,7 @@ Note the navbar above `r fontawesome::fa_i("hand-point-up", class="faa-bounce an
 This presentation also includes interactive elements
 
 + <span class="explain">Hoverable text tooltips</span><span class="tooltip">When you hover over these text elements a pop-up window appears to show additional information</span> are shown using red-ish text and a dotted underline
-+ Many graphs are also interactive, and display additional data when you hover over them - like the graph on to the right 
++ Many graphs are also interactive, and display additional data when you hover over them - like the plot.ly graph on to the right <span class="explain">Note</span><span class="tooltip">You should see a three-dimensional surface plot - If you hover your mouse over the surface, a tooltip shows information about the surface at the the coordinates where your mouse if pointing. You can also rotate the graph in any direction or zoom in/out.<br/><br/>These features rely on your browser being able to properly render WebGL content.  If you either don't see a graph, or if the graph responds very slowly, this is likely due to the WebGL settings in your browser - visit https://get.webgl.org for more info</span> 
 
 For more navigation options press "h" at any time
 ]
