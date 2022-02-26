@@ -48,6 +48,8 @@ xaringanExtra::use_panelset()
 library(ggplot2)
 library(plotly)
 library(SMRD)
+library(knitcitations)
+knitcitations::cite_options(cite.style = "authoryear")
 theme_set(theme_bw())
 #library(SMRD)
 root = rprojroot::find_root(rprojroot::is_git_root)
@@ -65,8 +67,7 @@ xaringanExtra::use_logo(
 
 
 ```{css, include=F}
-red{color: red;
-    font-weight: bold;}
+red{ color: red; }
 ```
 
 ```{r, eval=FALSE, include=FALSE}
@@ -217,8 +218,8 @@ Note the navbar above `r fontawesome::fa_i("hand-point-up", class="faa-bounce an
 
 This presentation also includes interactive elements
 
-+ <span class="explain">Hoverable text tooltips</span><span class="tooltip">When you hover over these text elements a pop-up window appears to show additional information</span> are shown using red-ish text and a dotted underline
-+ Many graphs are also interactive, and display additional data when you hover over them - like the plot.ly graph on to the right <span class="explain">Note</span><span class="tooltip">You should see a three-dimensional surface plot - If you hover your mouse over the surface, a tooltip shows information about the surface at the the coordinates where your mouse if pointing. You can also rotate the graph in any direction or zoom in/out.<br/><br/>These features rely on your browser being able to properly render WebGL content.  If you either don't see a graph, or if the graph responds very slowly, this is likely due to the WebGL settings in your browser - visit https://get.webgl.org for more info</span> 
++ This <span class="explain"></span><span class="tooltip">When you hover over these tooltips a pop-up window appears showing additional information</span> is a text tooltip - hover your mouse over this symbol
++ Many graphs are also interactive, and display additional data when you hover over them - like the plot.ly graph on to the right <span class="explain"></span><span class="tooltip">You should see a three-dimensional surface plot - If you hover your mouse over the surface, a tooltip shows information about the surface at the the coordinates where your mouse if pointing. You can also rotate the graph in any direction or zoom in/out.<br/><br/>These features rely on your browser being able to properly render WebGL content.  If you either don't see a graph, or if the graph responds very slowly, this is likely due to the WebGL settings in your browser - visit https://get.webgl.org for more info</span> 
 
 For more navigation options press "h" at any time
 ]
@@ -257,11 +258,11 @@ class: inverse, left, bottom, hide_logo
 
 .pull-left[
 
-The distribution is named after Ernst Hjalmar Waloddi Weibull (1887–1979), the <span class="explain">Swedish</span><span class="tooltip">As a Swede, his surname should be pronounced as "Vay-bull" not "Why-bull"</span> engineer, scientist, and mathematician 
+The distribution is named after Ernst Hjalmar Waloddi Weibull (1887–1979), the Swedish engineer, scientist, and mathematician <span class="explain"></span><span class="tooltip">As a Swede, his surname should be pronounced as "Vay-bull" not "Why-bull"</span>
 
 The Weibull distribution was actually discovered by the French mathematician Maurice Rene Fréchet in the course of deriving the Fréchet distribution (aka the inverse Weibull distribution)
 
-Weibull popularized his namesake distribution after publishing the <span class="explain">landmark paper</span><span class="tooltip">Weibull, Waloddi. "*A Statistical Distribution Function of Wide Applicability.*" Journal of Applied Mechanics 18 (1951): 293-297.</span> in 1951
+In his landmark paper, `r citet(" 10.1115/1.4010337")` popularized the use of his namesake distribution
 
 + Weibull had hoped to publish in a prominent mathematics journal, but had to "settle" for an applied engineering journal
 + Initial reaction to the paper was sharply negative
@@ -624,7 +625,7 @@ highchart() %>%
 
 .pull-right[
 
-The <span class="explain">hazard function</span><span class="tooltip"> aka the hazard rate function or failure rate function</span> is formally defined as the conditional probability that the R.V. <span class="mjx-char MJXc-TeX-math-I" style="display:inline;">T</span> falls in some interval <span class="mjx-char MJXc-TeX-math-I" style="display:inline;">t + &#916;t</span>
+The hazard function <span class="explain"></span><span class="tooltip"> aka the hazard rate function or failure rate function</span> is formally defined as the conditional probability that the R.V. <span class="mjx-char MJXc-TeX-math-I" style="display:inline;">T</span> falls in some interval <span class="mjx-char MJXc-TeX-math-I" style="display:inline;">t + &#916;t</span>
 
 $$
 `r gen_h`
@@ -636,7 +637,7 @@ $$
 h(t) = f(t) / S(t)
 $$
 
-Looking at the Weibull PDF, we see both the <font color="red">hazard function</font> and the <font color="blue">survival</font> function 
+Looking at the Weibull PDF, we see both the <font color="red">hazard</font> function and the <font color="blue">survival</font> function 
 
 $$
 f(t) = \redbf{\frac{\beta}{\eta}\left(\frac{t}{\eta}\right)^{\beta-1}}\bluebf{\exp\left[-\left(\frac{t}{\eta}\right)^{\beta}\right]}
@@ -679,13 +680,11 @@ When $1 < \beta < 2$
 
 .panel[.panel-name[Impact of &#x03B2; on Weibull functions]
 
-<img src="https://lh3.googleusercontent.com/tMxB5j8MxYNzRtTYoG2-uAmhk-QV9L30uLlolFwiHesMtjbq5Kgklb4PtMDVPVqsOqfIUTD--EtarrsNYcCvLpVh7qE5tZ4-5hi5oQAvfd1Ve18_9hdE9DoWvUcSm_i0Tw3O-E92Dj0=w2400">
+<img src="https://lh3.googleusercontent.com/-14JBhtF5kh49PxT6QiwgQCcwhc07tBXpjxKxTQzwywhJQigkeQ53WcG1pr6Vo484hJqn1J6hPayZ73qU1n9Ji-j0tikBz0AFiqINkjMKY5KJbln2WmdnG3lZhOKGWk_BOSV0qXQX4E=w1920-h1080">
 
 ```{r, echo=FALSE, eval=FALSE}
 knitr::include_graphics("images/weib_beta_haz1.gif")
 ```
-
-
 
 ]
 
@@ -714,7 +713,7 @@ class: inverse, left, bottom, hide_logo
 # Probability Plotting
 
 ---
-# Overview of Probability Plotting
+## Overview of Probability Plotting
 
 Probability plotting is a graphical method of fitting data to a chosen univariate probability model
 
@@ -733,7 +732,7 @@ where:
 - $t$ are the times at which an event was observed (failure, suspension)
 - $G(\cdot)$ and $g(\cdot)$ are transformations, specific to the chosen distribution
 
-If the plotted points fall "roughly" on a straight line, the distribution provides an <span class="explain">adequate</span><span class="tooltip">A probability plot on it's own is not sufficient to conclude that the chosen distribution provides the best description of the underlying process that generated the data<br/>There may be many models for which the plotted points fall "roughly" on a straight line - in this situation numerical methods (such as maximum likelihood) are used to determine which model provides the best fit<br/><br/>Probability plots are helpful for quickly <u>rejecting</u> models that provide a poor fit to the data as the plotted points will not fall "roughly" on a straight line</span> fit to the data.
+If the plotted points fall "roughly" on a straight line, the distribution provides an adequate fit to the data <span class="explain"></span><span class="tooltip">The word "adequate" means a probability plot on it's own is not sufficient to conclude that the chosen distribution provides the best description of the underlying process that generated the data<br/><br/>There may be many models for which the plotted points fall "roughly" on a straight line - in this situation numerical methods (such as maximum likelihood) are used to determine which model provides the best fit<br/><br/>Probability plots are helpful for quickly <u>rejecting</u> models that provide a poor fit to the data as the plotted points will not fall "roughly" on a straight line</span>
 
 The parameter values (i.e. slope and intercept) of the best fit line can be determined by graphical estimation, least squares optimization, or maximum likelihood estimation
 
@@ -857,7 +856,7 @@ knitr::include_graphics(file.path(root, "images"  ,"build_weibull","points.png")
 ]
 
 .pull-right[
-<br/><br/>
+<br/>
 <red>Plotted Points representing the "observed unreliabilities"</red>
 
 - <red>X-axis:</red> $\redbf{t_i, i = 1,2,\ldots,N}$<br/> <red>ordered event times</red>
@@ -877,8 +876,8 @@ knitr::include_graphics(file.path(root, "images"  ,"build_weibull","axes.png"))
 ]
 
 .pull-right[
-<br/><br/>
-Plotted Points
+<br/>
+Plotted Points representing the "observed unreliabilities"
 
 - X-axis: $t_i, i = 1,2,\ldots,N$<br/> ordered event times
 - Y-axis: $\hat{F}(t_i), i = 1,2,\ldots,N$<br/> non-parametric estimate of the Weibull CDF
@@ -900,16 +899,15 @@ knitr::include_graphics(file.path(root, "images"  ,"build_weibull","mle.png"))
 ]
 
 .pull-right[
-<br/><br/>
-Plotted Points
+<br/>
+Plotted Points representing the "observed unreliabilities"
 
 - X-axis: $t_i, i = 1,2,\ldots,N$<br/> ordered event times
 - Y-axis: $\hat{F}(t_i), i = 1,2,\ldots,N$<br/> non-parametric estimate of the Weibull CDF
 
 Axes: transformed according to a linearized Weibull CDF
 
-<red>Best fit line representing the predicted values from the Weibull model
-</red>
+<red>Best fit line representing the predicted values from the Weibull model</red>
 
 - <red>Estimated using maximum likelihood</red> $\redbf{\widehat{\beta_{_{MLE}}},\widehat{\eta_{_{MLE}}}}$
 <br/>
@@ -929,8 +927,8 @@ knitr::include_graphics(file.path(root, "images"  ,"build_weibull","ci.png"))
 ]
 
 .pull-right[
-<br/><br/>
-Plotted Points
+<br/>
+Plotted Points representing the "observed unreliabilities"
 
 - X-axis: $t_i, i = 1,2,\ldots,N$<br/> ordered event times
 - Y-axis: $\hat{F}(t_i), i = 1,2,\ldots,N$<br/> non-parametric estimate of the Weibull CDF
@@ -943,7 +941,7 @@ Best fit line representing the predicted values from the Weibull model
 <br/>
 - Estimated using ordinary least squares $\widehat{\beta_{_{OLS}}},\widehat{\eta_{_{OLS}}}$
 
-<red>Upper and lower</red> $\redbf{100(1-\alpha)\%}$ <red>confidence intervals</red>
+<red>Upper/lower</red> $\redbf{100(1-\alpha)\%}$ <red>confidence intervals</red>
 
 ]
 
@@ -992,16 +990,16 @@ knitr::include_graphics(file.path(root, "images"  ,"build_weibull","both_axes_1-
 .pull-right[
 This method has been popularized through the use of <a target="_blank" href="https://www.weibull.com/GPaper/">**Weibull Plotting papers**</a>
 
-Note the values on the second y-axis (right side) - these values <span class="explain">correspond to failure probabilities</span><span class="tooltip">Examples:<br/>
+Note the values on the second y-axis (right side) - these values correspond to failure probabilities (left side) that have been transformed according to the linearized Weibull CDF <span class="explain"></span><span class="tooltip">Examples:<br/>
 $$
 \begin{aligned}
 1.933 &\approx \log\bigg[\log\bigg[\frac{1}{1-0.999}\bigg]\bigg]\\\\
 -5.296 &\approx \log\bigg[\log\bigg[\frac{1}{1-0.005}\bigg]\bigg]
 \end{aligned}
 $$
-</span> (left side) that have been transformed according to the linearized Weibull CDF
+</span>
 
-This method <span class="explain">overwrites the true y-axis values</span><span class="tooltip">For example, 1.933 is overwritten with 0.999<br/><br/>As result, the y-axis on Weibull plots appears to be logarithmic - but it's really a linear axis with some clever hand waving `r fontawesome::fa_i("hand-paper", class="faa-wrench animated")`</span> with their corresponding probabilities
+This method overwrites the true y-axis values with their corresponding probabilities <span class="explain"></span><span class="tooltip">For example, 1.933 is overwritten with 0.999<br/><br/>As result, the y-axis on Weibull plots appears to be logarithmic - but it's really a linear axis with some clever hand waving `r fontawesome::fa_i("hand-paper", class="faa-wrench animated")`</span>
 
 - The advantage of this method is that the raw failure times and nonparametric estimates can be plotted directly and the resulting plot is more easily interpretable 
 
@@ -1093,9 +1091,9 @@ $$
 
     + $i$ is an index of the ordered observations (smallest $\rightarrow$ largest)
     + $n$ is the number of observations
-    + $a$ is the <span class="explain">plotting position parameter</span><span class="tooltip">The value of $a$ is chosen to produce approximately unbiased estimates of $F(t_{i})$ for an assumed distribution</span>
+    + $a$ is the plotting position parameter <span class="explain"></span><span class="tooltip">The value of $a$ is chosen to produce approximately unbiased estimates of $F(t_{i})$ for an assumed distribution</span>
 
-Various formulae <span class="explain">have been developed</span> <span class="tooltip">
+Various formulae have been developed to correspond with specific distributions <span class="explain"></span><span class="tooltip">
 <br/>
 The formulae used most often in practice are:
 <br/>
@@ -1107,28 +1105,198 @@ $$
 \end{aligned}
 $$
 Note: the Chegodayev plotting position is also known as "Median-Ranks"
-</span> to correspond with specific distributions
+</span>
 
 ]
 ]
 
 ---
-## Plotting Position Example - Complete Data
+class: inverse, left, bottom, hide_logo
+
+# Fitting models to data
+
+---
+## Overview
+
+.pull-left[
+
+]
+
+.pull-right[
+```{r, echo=FALSE}
+5
+```
+
+]
+
+---
+## Maximum Likelihood Estimation
 
 .panelset[
 
 .panel[.panel-name[Overview]
 
-The data used in this example is a complete data set
+ML estimation is a versatile method for fitting statistical models to data
 
+- Can be applied to a wide variety of statistical models and data structures
+
+- Provides a numerical procedure to discern which model best-fits a data set (among a set of selected models)
+
+ML estimation produces efficient and consistent estimators under certain regularity conditions<span class="explain"></span><span class="tooltip"><b><u>Maximum Likelihood Regularity Conditions</u></b><br/><br/>
+The support region for a selected model does not depend on <math xmlns="http://www.w3.org/1998/Math/MathML"><mi>&#x03B8;<!-- θ --></mi></math>
+<br/><br/>
+The parameters are identifiable (i.e., for <math xmlns="http://www.w3.org/1998/Math/MathML"><msub><mi>&#x03B8;<!-- θ --></mi><mn>1</mn></msub><mo>&#x2260;<!-- ≠ --></mo><msub><mi>&#x03B8;<!-- θ --></mi><mn>2</mn></msub><mo>,</mo><mspace width="thickmathspace"/><mi>f</mi><mo stretchy="false">(</mo><mi>t</mi><mrow class="MJX-TeXAtom-ORD"><mo stretchy="false">|</mo> </mrow><msub><mi>&#x03B8;<!-- θ --></mi><mn>1</mn></msub><mo stretchy="false">)</mo>  <mo>&#x2260;<!-- ≠ --></mo><mi>f</mi><mo stretchy="false">(</mo><mi>t</mi><mrow class="MJX-TeXAtom-ORD"><mo stretchy="false">|</mo></mrow><msub><mi>&#x03B8;<!-- θ --></mi><mn>2</mn></msub><mo stretchy="false">)</mo><mo>,</mo><mspace width="thickmathspace"/><mi mathvariant="normal">&#x2200;<!-- ∀ --></mi><mi>t</mi></math> )
+<br/><br/><math xmlns="http://www.w3.org/1998/Math/MathML"><mi>f</mi><mo stretchy="false">(</mo><mi>t</mi><mrow class="MJX-TeXAtom-ORD"><mo stretchy="false">|</mo></mrow><munder><mi>&#x03B8;<!-- θ --></mi><mo>&#x005F;<!-- _ --></mo></munder><mo stretchy="false">)</mo></math> has a <math xmlns="http://www.w3.org/1998/Math/MathML"><msup><mn>3</mn><mrow class="MJX-TeXAtom-ORD"><mi>r</mi><mi>d</mi></mrow></msup></math> mixed partial derivative <math xmlns="http://www.w3.org/1998/Math/MathML"><mi>E</mi><mrow><mo>[</mo><mfrac><mrow><msup><mi mathvariant="normal">&#x2202;<!-- ∂ --></mi><mrow class="MJX-TeXAtom-ORD"><mn>2</mn></mrow></msup><mi>log</mi><mo>&#x2061;<!-- ⁡ --></mo><mo stretchy="false">(</mo><mi>f</mi><mo stretchy="false">(</mo><mi>t</mi><mrow class="MJX-TeXAtom-ORD"><mo stretchy="false">|</mo></mrow><mi>&#x03B8;<!-- θ --></mi><mo stretchy="false">)</mo><mo stretchy="false">)</mo></mrow><mrow><mi mathvariant="normal">&#x2202;<!-- ∂ --></mi><mi>&#x03B8;<!-- θ --></mi><mo stretchy="false">(</mo><mi mathvariant="normal">&#x2202;<!-- ∂ --></mi><mi>&#x03B8;<!-- θ --></mi><msup><mo stretchy="false">)</mo><mi>T</mi></msup></mrow></mfrac><mo>]</mo></mrow><mo>=</mo><mfrac><mrow><msup><mi mathvariant="normal">&#x2202;<!-- ∂ --></mi><mn>2</mn></msup><mi>E</mi><mrow><mo>[</mo> <mrow><mi>log</mi><mo>&#x2061;<!-- ⁡ --></mo><mo stretchy="false">(</mo><mi>f</mi><mo stretchy="false">(</mo><mi>t</mi><mrow class="MJX-TeXAtom-ORD"><mo stretchy="false">|</mo></mrow><mi>&#x03B8;<!-- θ --></mi><mo stretchy="false">)</mo><mo stretchy="false">)</mo></mrow><mo>]</mo></mrow></mrow><mrow><mi mathvariant="normal">&#x2202;<!-- ∂ --></mi><mi>&#x03B8;<!-- θ --></mi><mo stretchy="false">(</mo><mi mathvariant="normal">&#x2202;<!-- ∂ --></mi><mi>&#x03B8;<!-- θ --></mi><msup><mo stretchy="false">)</mo><mi>T</mi></msup></mrow></mfrac></math>
+<br/><br/>Elements of the Hessian matrix <math xmlns="http://www.w3.org/1998/Math/MathML"><msub><mrow class="MJX-TeXAtom-ORD"><mi mathvariant="script">I</mi></mrow><mrow class="MJX-TeXAtom-ORD"><mi>&#x03B8;<!-- θ --></mi></mrow></msub></math> are finite
+<br/><br/><math xmlns="http://www.w3.org/1998/Math/MathML"><msub><mrow class="MJX-TeXAtom-ORD"><mi mathvariant="script">I</mi></mrow><mrow class="MJX-TeXAtom-ORD"><mi>&#x03B8;<!-- θ --></mi></mrow></msub></math> is a positive-definite matrix
+<br/><br/>The value of <math xmlns="http://www.w3.org/1998/Math/MathML"><msub><mi>&#x03B8;<!-- θ --></mi><mrow class="MJX-TeXAtom-ORD"><mi>M</mi><mi>L</mi><mi>E</mi></mrow></msub></math> is on the interior of the parameter space
+</span>
+
+- Efficient - Estimates $\mathbf{\underline{\theta}}=\theta_{1},\theta_{2},...$ in the "best-manner"
+    
+- Consistent - $\text{as}\;n\rightarrow\infty, \;\;f(\hat{\theta}_{_{MLE}}\xrightarrow{L}\theta)$
+
+]
+
+.panel[.panel-name[Properties]
+
+The likelihood is equal to the joint probability of the data
+
+$$\mathscr{L}(\underline{\theta}|\underline{x})=\sum_{i=1}^{n}\mathscr{L}_{i}(\underline{\theta}|x_i)=f(\underline{x}|\underline{\theta})=\prod_{i=1}^{n}f(x_{i}|\underline{\theta}),\;\;\text{if}\;x_{i}\; iid$$
+
+Properties of the Likelihood Function $\mathscr{L}$
+
+1. $\mathscr{L}(\theta|\underline{x})\ge 0$
+
+2. $\mathscr{L}(\theta|\underline{x})$ is not a pdf i.e. $\int \mathscr{L}(\theta|\underline{x})\;d\theta \ne 1$
+
+3. Suggests (relatively) which values of $\theta$ are more likely to have generated the observed data $\underline{x}$ (assuming the chosen parametric model is correct)
+
+4. If it exists, we say that the value of $\underline{\theta}$ that maximizes $\mathscr{L}(\underline{\theta}|\underline{x})$ is the maximum likelihood estimator (denoted $\hat{\theta}_{_{MLE}}$)
+
+5. We often try to find $\hat{\theta}_{_{MLE}}$ by maximizing the log-likelihood function $\mathcal{L}(\underline{\theta}|\underline{x})=\log\Big(\mathscr{L}(\underline{\theta}|\underline{x})\Big)$
+
+]
+
+.panel[.panel-name[Definition]
+
+Both $f(t|\underline{\theta})$ and $\mathscr(\underline{\theta})$ start with a distributional assumption
+
+.pull-left[
+
+$f(\underline{x}|\underline{\theta})$ 
+
+- Returns the probability of observing data $\underline{x}=x_1,...,x_n, \;\;n\in(1,\infty)$ from a specified distribution $f(x|\theta)$ <span class="explain"></span><span class="tooltip"><b><u>This statement comes with two assumptions</u></b><br/><br/>1. We know (or at least have specified) a functional form values for $\theta$<br/><br/>2. We know (or at least have specified) values for $\theta$</span>
+
+- Is a function of $\underline{x}$ assuming $\underline{\theta}=\theta_{1},\theta_{2},...$ are <focus>known</focus>
+
+- What data $\underline{x}$ are most likely to be produced by a distribution with parameters $\underline{\theta}$?
+
+- $f(x_i|\underline{\theta})$ is the probability density associated with observation $x_i$
+
+]
+
+.pull-right[
+
+$\mathscr{L}(\underline{\theta}|\underline{x})$ 
+
+- Returns the likelihood that $\underline{\theta}$ are the parameters that produced $\underline{x}=x_1,...,x_n, \;\;n\in(1,\infty)$ from a specified distribution of the form $f(x|\theta)$
+
+- Is a function of $\underline{\theta}$ assuming $\underline{x}=x_{1},...,x_{n}$ has already been observed
+
+- What values of $\underline{\theta}$ are most likely to have produced $\underline{x}$?
+
+]
+
+]
+
+.panel[.panel-name[Definitions 2]
+
+The Likelihood Function and Its Maximum
+
+- The value of the likelihood function $\mathscr{L}(\underline{\theta}|\underline{t})$ depends on
+
+    1. The assumed parametric model
+    2. The observed data
+
+- The total likelihood is comprised of the contributions from every observation
+
+    + For observations $t_i, i = 1,\cdots,n$, the model with the highest joint probability is the model that is most likely to have generated the observations
+    + For a single observation, the model providing the greatest contribution to the total likelihood may not be the correct model
+    + As the number of observatons is increased, more information is obtained and it becomes easier to differentiate which model best-fits the data and best describes the underlying failure process 
+
+]
+
+.panel[.panel-name[Reliability Data]
+
+Likelihood Contributions For Reliability Data
+
+- For failure data, each observation makes one of four contributions to the likelihood function
+
+$$\mathscr{L}_{i}(\underline{\theta}|t_{i})=\begin{cases} S(t_{i}) &\mbox{for a right censored observation}\\F(t_{i}) &\mbox{for a left censored observation}\\F(t_{i})-F(t_{i-1}) &\mbox{for an interval censored observation}\\\lim\limits_{\Delta_i\rightarrow 0} \frac{(F(t_{i})-\Delta_{i})-F(t_{i})}{\Delta_{i}} &\mbox{for an exact" observation}\end{cases}$$
+
+- Thus, the total likelihood function may be expressed as
+
+$$\mathscr{L}(\underline{\theta}|\underline{t})=C\prod_{i=1}^{n} \mathscr{L}_{i}(\underline{\theta}|t_i)
+=C\prod_{i=1}^{m+1}\Big(F(t_{i})\Big)^{l_{i}}\Big(F(t_{i})-F(t_{i-1})\Big)^{d_{i}}\Big(1-F(t_{i})\Big)^{r_{i}}$$
+
+- where
+
+    + $l_i=1$ if $t_i$ is a left censored observation (0 otherwise)
+    + $d_i=1$ if $t_i$ is an interval censored observation (0 otherwise)
+    + $r_i=1$ if $t_i$ is a right censored observation (0 otherwise)
+    + $n = \sum_{j=1}^{m+1}(l_{j}+d_{j}+r_{j})$
+
+]
+]
+
+
+---
+## Example: Complete Data Set
+
+.panelset[
+
+.panel[.panel-name[Overview]
+
+.pull-left[
+
+.bold[Motivation]
+
+- Fatigue is known to affect the service life of deep-groove ball bearings
+
+- Higher stresses further reduces the fatigue life of the ball bearings
+
+- A failure time regression model was developed to describe the effect that higher levels of stress have on the fatigue life of these bearings
+
+- However, there was disagreement within the industry on whether the estimated parameter values currently being used were accurate
+
+- Additional tests were needed to reduce the uncertainty about the parameter values used to model fatigue life as a function of applied stress
+
+]
+.pull-right[
+
+.bold[Study Objectives]
+
+- Test $n = 23$ ball bearings at a key stress levels to augment the existing failure data
+
+- The additional observations should result in better estimates of the parameter values
+
+.bold[Analysis]
+
+- The data are the number of accumulated fatigue cycles (in millions) when each failure was observed 
+
+- The applied stress applied to each bearing in this test is unknown - must assume that the stress applied to all 23 bearings was equivalent
+
+]
 ]
 
 .panel[.panel-name[Data]
 
 ```{r, echo=FALSE}
-n = length(obs)
+.obs = SMRD::lzbearing
+n = nrow(.obs)
 i = 1:n
-t = obs
+t = .obs
 h = (i - 0.5) / n
 mr = (i - 0.3) / (n + 0.4)
 we = (i) / (n + 1)
@@ -1145,52 +1313,67 @@ colnames(.df) <- c("Event time (t)",
 
 DT::datatable(.df, options = list("pageLength" = 8))
 ```
-]
-
-.panel[.panel-name[Plot]
 
 ]
+
+.panel[.panel-name[Event Plots]
+
+.pull-left[
+
+```{r, echo=FALSE, fig.cap="Event plot of the ball bearing failure data"}
+par(family='serif', font=2)
+
+lzbearing.ld <- frame.to.ld(SMRD::lzbearing, 
+                            response.column = 1, 
+                            time.units = 'Megacycles')
+
+event.plot(lzbearing.ld)
+```
+
 ]
----
-class: inverse, left, bottom, hide_logo
 
-# Maximum Likelihood Estimation
+.pull-right[
 
----
-## The Likelihood Function and Its Maximum
+```{r, echo=FALSE, fig.cap="Histogram of the ball bearing failure data"}
+par(family = 'serif', font = 2)
 
-- The value of the likelihood function $\mathscr{L}(\underline{\theta}|\underline{t})$ depends on
+hist(SMRD::lzbearing$megacycles,
+     breaks = seq(0,200,20),
+     col = 'black',
+     border = 'white',
+     prob = TRUE,
+     main = '',
+     las = 1)
+```
 
-    1) The assumed parametric model
 
-    2) The observed data
+]
+]
 
-- The total likelihood is comprised of the contributions from every observation
+.panel[.panel-name[Likelihood]
 
-    + For observations $t_i, i = 1,\cdots,n$, the model with the highest joint probability is the model that is most likely to have generated the observations
+.pull-left[
 
-    + For a single observation, the model providing the greatest contribution to the total likelihood may not be the correct model
+The likelihood function for this data set is expressed as
 
-    + As the number of observatons is increased, more information is obtained and it becomes easier to differentiate which model best-fits the data and best describes the underlying failure process 
+$$
+\begin{aligned}
+\mathscr{L}(DATA|f,\eta,\beta) &= \prod_{i=1}^{23}\frac{\beta}{\eta}\bigg(\frac{t_{i}}{\eta}\bigg)\exp\bigg[-\bigg(\frac{t_i}{\eta}\bigg)^{\beta}\bigg]\\\\
+&=\frac{\beta}{\eta}\bigg(\frac{t_{1}}{\eta}\bigg)\exp\bigg[-\bigg(\frac{t_1}{\eta}\bigg)^{\beta}\bigg]\times\cdots\times\frac{\beta}{\eta}\bigg(\frac{t_{23}}{\eta}\bigg)\exp\bigg[-\bigg(\frac{t_{23}}{\eta}\bigg)^{\beta}\bigg]
+\end{aligned}
+$$
 
----
-## Likelihood Contributions For Reliability Data
+The objective is to find the values of $\beta$ and $\eta$ that maximize this function
 
-- For failure data, each observation makes one of four contributions to the likelihood function
+The surface to the right shows the maximum value and this tooltip shows R code used to numerically find the optimal values
 
-$$\mathscr{L}_{i}(\underline{\theta}|t_{i})=\begin{cases} S(t_{i}) &\mbox{for a right censored observation}\\F(t_{i}) &\mbox{for a left censored observation}\\F(t_{i})-F(t_{i-1}) &\mbox{for an interval censored observation}\\\lim\limits_{\Delta_i\rightarrow 0} \frac{(F(t_{i})-\Delta_{i})-F(t_{i})}{\Delta_{i}} &\mbox{for an exact" observation}\end{cases}$$
+]
+]
 
-- Thus, the total likelihood function may be expressed as
+.panel[.panel-name[Weibull Plot]
 
-$$\mathscr{L}(\underline{\theta}|\underline{t})=C\prod_{i=1}^{n} \mathscr{L}_{i}(\underline{\theta}|t_i)
-=C\prod_{i=1}^{m+1}[F(t_{i})]^{l_{i}}[F(t_{i})-F(t_{i-1})]^{d_{i}}[1-F(t_{i})]^{r_{i}}$$
-
-- where
-
-    + $l_i=1$ if $t_i$ is a left censored observation (0 otherwise)
-    + $d_i=1$ if $t_i$ is an interval censored observation (0 otherwise)
-    + $r_i=1$ if $t_i$ is a right censored observation (0 otherwise)
-    + $n = \sum_{j=1}^{m+1}(l_{j}+d_{j}+r_{j})$
+]
+]
 
 ---
 ## Example data
@@ -1211,7 +1394,12 @@ This is some text
 
 .panel[.panel-name[Likelihood Surface]
 
-
-
 ]
 ]
+
+---
+## References
+
+```{r, results='asis', comment=NA}
+bibliography(bib.style = "authoryear")
+```
