@@ -1,0 +1,63 @@
+NIIN: 011291256 Date/Time: 09 Feb 2022 17:42 Z
+PROBLEM ITEM DATA SHEET (PIDS) BACKORDERS'_ 1 new
+NSN: 1560011291256GC Mgr Rev: E AF NON PRI ROU
+NOUN: SAS ACTUATOR ASSY Budget: 8 MICAP YBQ JCS RSP AWP FMS~ CTR AF (1-8) (9-15)
+SOS/ORG: WR /LULC IMS: 8H5 ES: XH AAC: V 0 2 6 12 0 0 0 0 30 9
+IM NAME: TAHJ M ANDERSON ERRC: T Total B/O: 39 New B/O: 1 Avg B/O Age: 208 |FMS Buys: 0
+TELEPHONE: (470) 255-5364 ERRCD: XD2 |+ Base O/H: 76 B/O Variance: -12 |[DO35K]B/Os: 0 Oldest (days): 0
+GROUP/SQUAD./FLIGHT: 638 SCMG/411 SCMS/GULB
+ASSET AVAILABILITY ASSETS AT DEPOT (WHOLESALE) - NO DATA FOUND
+WW SVC UNSVC SUSP TOTAL CONDITION CODE
+39 DEPOT: 0 0 0 0 A F G K M Q R X Y Z
+VAR BASE: 36 0 1 37
+-2 CTR: 0 0 0 0
+TOTAL: 36 0 1 37
+REPAIR DATA EXPRESS - NO DATA FOUND
+SOR: DA PROD + CTR = TTL SPARE QTR_ Pushed (Attempted Inductions):
+Shop: 0 0 0 0 2/22 ITEM #:
+Control #: 0 0 0 0 1/22 CARC PARTS HOURS FUNDS SORT VALUE
+Work Lvl CSI: 0 0 0 0 0 4/21
+OWO: 0 0 0 0 0 3/21
+D200 DATA
+8 Qtr Avg 4 Qtr Avg Rate | BR Cyc DR L/T O&ST Shp Flo | On Order | Di Unsve
+NRTS: 10.62 7.75 97.0% 4S 22 23 A 21C 0 0
+RTS: 0.38 0.26 3.0% | MDR: 2.3333 QDR: 7.0 PSC: 1000
+TEP REP GENS. Oo yo | Dmdivi | RSPiv’ | PrepReq | RO — [#-RO: -33.0_
+0.0 0.0 0.0% 24 44 51 69 %RO: 52
+DEP O/H GENS: 0.0 0.0 0.0% : 5/0 5200 Sp Lvl Cur R _D
+DLM PROGRAM: 0.0 0.0 19 o 86 21
+DEPOT CONDEMN: 0.0 0.0
+BASE CONDEMN: 0.0 0.0 0.21%
+COMMENTS MICAP DATA - NO DATA FOUND
+Function of Item | SAS ACTUATOR ASSY End lt H Crnt H
+PN 70410-02500-049 =_- =— -_e
+Signed: craig.k.giddens1, Last Updated Date: 07/29/2021
+Constraint Category: None | Required Manager Review APPLICATIONS
+Code (for Safety of Flight coded NSNs) is preventing NIMSC End Item PSC QPA APPL %
+5 requisitions from automatically passing to the PICA. —_ — _, __,
+Requisitions must be manually passed from the SICA to the HHO60G 1000 1 100
+PICA.
+CONTRACT REPAIR - NO DATA FOUND
+Signed: craig.k.giddens1, Last Updated Date: 11/29/2021, To
+Comment Status: Out of Date! Contract Number CLIN Delivery Order Number — Total On CLIN ALT PLT
+New Procurement | PICA: Army (B17)
+SICA: AF NIMSC 5 (FLZ)
+NEW BUY DUE-IN - NO DATA FOUND
+Signed: craig.k.giddens1, Last Updated Date: 11/29/2021, TO
+Comment Status: Out of Date! Contract Number CLIN Delivery Order Number — Total On CLIN ALT PLT
+Repair Status Category: Organic and Contract | PICA: Army
+(B17)
+SICA: AF NIMSC 5 (FLZ)
+Signed: craig.k.giddens1, Last Updated Date: 11/29/2021,
+Comment Status: Out of Date!
+Workaround/Surplus/Other | Program Manager: Tiyanna
+Lockhart / tivanna.lockhart@us.af.mil
+Equipment Specialist: Eric Cochran / eric.cochran.2@us.af.mil
+Signed: craig.k.giddens1, Last Updated Date: 11/29/2021,
+Comment Status: Out of Date!
+Get Well Dates
+JCS/700: Now, MICAP: Now, Priority: Now, Routine: Now,
+POC: Craig Giddens, Routing Symbol: 411 SCMS/GULC,
+DSN: 497-6935
+Page 1 of 1
+
