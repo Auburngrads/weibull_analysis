@@ -1,0 +1,32 @@
+---
+title: "Introduction to Weibull Analysis"
+#author: "Jason Freels"
+date: "`r format(Sys.Date(), '%d %b %Y')`"
+output:
+  xaringan::moon_reader:
+    css: ["default",
+          "css/xaringan.css",
+          "css/font-awesome-animation.min.css"]
+    self_contained: true
+    lib_dir: libs
+    chakra: libs/remark-latest-min.js
+    seal: no
+    nature:
+      ratio: '16:9'
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+    yolo: false
+---
+
+<font style=" color:red; background-color: green; border: solid green 1px; border-radius: 20px; padding:5px 5px;">?</font>
+
+
+<span class="explain">Hoverable text tooltips</span><span class="tooltip">When you hover over these text elements a pop-up window appears to show additional information</span> are shown using red-ish text and a dotted underline
+
+<span class="explain">?</span><span class="tooltip">When you hover over these text elements a pop-up window appears to show additional information</span> are shown using red-ish text and a dotted underline
+
+When you see this symbol <span class="explain"></span><span class="tooltip">When you hover over these text elements a pop-up window appears to show additional information</span> are shown using red-ish text and a dotted underline
+
+
+&#128712; &#8505; and &#9432;
