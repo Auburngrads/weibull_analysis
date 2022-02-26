@@ -1,0 +1,225 @@
+---
+title: "Introduction to Weibull Analysis"
+#author: "Jason Freels"
+date: "`r format(Sys.Date(), '%d %b %Y')`"
+output:
+  xaringan::moon_reader:
+    css: ["default",
+          "css/xaringan.css",
+          "css/font-awesome-animation.min.css"]
+    self_contained: true
+    lib_dir: libs
+    chakra: libs/remark-latest-min.js
+    seal: no
+    nature:
+      ratio: '16:9'
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+    yolo: false
+---
+class: inverse, left, bottom, hide_logo
+<!--background-image: url("images/U.S.-Air-Force.jpg")-->
+<!-- background-image: url("images/rso.png") -->
+<!-- background-position: top, left -->
+<!-- background-size: 50 -->
+
+# Introduction to Weibull Analysis
+
+## `r format(Sys.Date(), '%d %b %Y')`
+
+```{r setup, include=FALSE, cache=FALSE}
+# Set global R options
+options(htmltools.dir.version = FALSE, servr.daemon = TRUE)
+# Set global knitr chunk options
+knitr::opts_chunk$set(
+  fig.align = "center",
+  cache = !TRUE,
+  error = FALSE,
+  message = FALSE,
+  warning = FALSE,
+  collapse = TRUE ,
+  echo = F
+)
+# set ggplot to black and white theme
+library(highcharter)
+library(xaringanExtra)
+xaringanExtra::use_panelset()
+library(ggplot2)
+library(plotly)
+library(SMRD)
+library(knitcitations)
+knitcitations::cite_options(cite.style = "authoryear")
+theme_set(theme_bw())
+#library(SMRD)
+root = rprojroot::find_root(rprojroot::is_git_root)
+```
+
+```{r xaringan-logo, echo=FALSE, eval=FALSE}
+xaringanExtra::use_logo(
+  image_url = "https://pbs.twimg.com/profile_images/1242553053519073281/X2fHgMX9_400x400.jpg",
+  width = "60px",
+  height = "60px",
+  position = css_position(bottom = "2em", right = "0.75em"),
+  exclude_class = c("hide_logo")
+)
+```
+
+
+```{css, include=F}
+red{ color: red; }
+```
+
+---
+## Introduction
+
+Weibull Analysis is a family of graphical and statistical techniques used estimate important life characteristics of a product by fitting a parameterized probability distribution to life data
+
+This presentation introduces several aspects of Weibull analysis and how they are implemented on various types of reliability data
+
+- The Weibull distribution
+
+    + Background, properties, and importance
+    + Distribution functions
+    + Parameters: shape $\beta$, scale $\eta$, location $\theta$
+    + Relationship to other distributions
+
+- Weibull probability plots
+
+    + Constructing the plot
+    + Plotting the observed events
+    + Fitting the Weibull model and estimating parameters
+
+$$\newcommand\redbf[1]{\color{red}{\boldsymbol{#1}}}$$
+$$\newcommand\mbf[1]{{\boldsymbol{#1}}}$$
+$$\newcommand\greenbf[1]{\color{green}{\boldsymbol{#1}}}$$
+$$\newcommand\bluebf[1]{\color{blue}{\boldsymbol{#1}}}$$
+$$\newcommand\purplebf[1]{\color{purple}{\boldsymbol{#1}}}$$
+
+
+---
+## Maximum Likelihood Estimation
+
+.panelset[
+
+.panel[.panel-name[Overview]
+
+ML estimation is a versatile method for fitting statistical models to data
+
+- Can be applied to a wide variety of statistical models and data structures
+
+- Provides a numerical procedure to discern which model best-fits a data set (among a set of selected models)
+
+ML estimation produces efficient and consistent estimators under certain regularity conditions<span class="explain"></span><span class="tooltip"><b><u>Maximum Likelihood Regularity Conditions</u></b><br/><br/>
+The support region for a selected model does not depend on <math xmlns="http://www.w3.org/1998/Math/MathML"><mi>&#x03B8;<!-- θ --></mi></math>
+<br/><br/>
+The parameters are identifiable (i.e., for <math xmlns="http://www.w3.org/1998/Math/MathML"><msub><mi>&#x03B8;<!-- θ --></mi><mn>1</mn></msub><mo>&#x2260;<!-- ≠ --></mo><msub><mi>&#x03B8;<!-- θ --></mi><mn>2</mn></msub><mo>,</mo><mspace width="thickmathspace"/><mi>f</mi><mo stretchy="false">(</mo><mi>t</mi><mrow class="MJX-TeXAtom-ORD"><mo stretchy="false">|</mo> </mrow><msub><mi>&#x03B8;<!-- θ --></mi><mn>1</mn></msub><mo stretchy="false">)</mo>  <mo>&#x2260;<!-- ≠ --></mo><mi>f</mi><mo stretchy="false">(</mo><mi>t</mi><mrow class="MJX-TeXAtom-ORD"><mo stretchy="false">|</mo></mrow><msub><mi>&#x03B8;<!-- θ --></mi><mn>2</mn></msub><mo stretchy="false">)</mo><mo>,</mo><mspace width="thickmathspace"/><mi mathvariant="normal">&#x2200;<!-- ∀ --></mi><mi>t</mi></math> )
+<br/><br/><math xmlns="http://www.w3.org/1998/Math/MathML"><mi>f</mi><mo stretchy="false">(</mo><mi>t</mi><mrow class="MJX-TeXAtom-ORD"><mo stretchy="false">|</mo></mrow><munder><mi>&#x03B8;<!-- θ --></mi><mo>&#x005F;<!-- _ --></mo></munder><mo stretchy="false">)</mo></math> has a <math xmlns="http://www.w3.org/1998/Math/MathML"><msup><mn>3</mn><mrow class="MJX-TeXAtom-ORD"><mi>r</mi><mi>d</mi></mrow></msup></math> mixed partial derivative <math xmlns="http://www.w3.org/1998/Math/MathML"><mi>E</mi><mrow><mo>[</mo><mfrac><mrow><msup><mi mathvariant="normal">&#x2202;<!-- ∂ --></mi><mrow class="MJX-TeXAtom-ORD"><mn>2</mn></mrow></msup><mi>log</mi><mo>&#x2061;<!-- ⁡ --></mo><mo stretchy="false">(</mo><mi>f</mi><mo stretchy="false">(</mo><mi>t</mi><mrow class="MJX-TeXAtom-ORD"><mo stretchy="false">|</mo></mrow><mi>&#x03B8;<!-- θ --></mi><mo stretchy="false">)</mo><mo stretchy="false">)</mo></mrow><mrow><mi mathvariant="normal">&#x2202;<!-- ∂ --></mi><mi>&#x03B8;<!-- θ --></mi><mo stretchy="false">(</mo><mi mathvariant="normal">&#x2202;<!-- ∂ --></mi><mi>&#x03B8;<!-- θ --></mi><msup><mo stretchy="false">)</mo><mi>T</mi></msup></mrow></mfrac><mo>]</mo></mrow><mo>=</mo><mfrac><mrow><msup><mi mathvariant="normal">&#x2202;<!-- ∂ --></mi><mn>2</mn></msup><mi>E</mi><mrow><mo>[</mo> <mrow><mi>log</mi><mo>&#x2061;<!-- ⁡ --></mo><mo stretchy="false">(</mo><mi>f</mi><mo stretchy="false">(</mo><mi>t</mi><mrow class="MJX-TeXAtom-ORD"><mo stretchy="false">|</mo></mrow><mi>&#x03B8;<!-- θ --></mi><mo stretchy="false">)</mo><mo stretchy="false">)</mo></mrow><mo>]</mo></mrow></mrow><mrow><mi mathvariant="normal">&#x2202;<!-- ∂ --></mi><mi>&#x03B8;<!-- θ --></mi><mo stretchy="false">(</mo><mi mathvariant="normal">&#x2202;<!-- ∂ --></mi><mi>&#x03B8;<!-- θ --></mi><msup><mo stretchy="false">)</mo><mi>T</mi></msup></mrow></mfrac></math>
+<br/><br/>Elements of the Hessian matrix <math xmlns="http://www.w3.org/1998/Math/MathML"><msub><mrow class="MJX-TeXAtom-ORD"><mi mathvariant="script">I</mi></mrow><mrow class="MJX-TeXAtom-ORD"><mi>&#x03B8;<!-- θ --></mi></mrow></msub></math> are finite
+<br/><br/><math xmlns="http://www.w3.org/1998/Math/MathML"><msub><mrow class="MJX-TeXAtom-ORD"><mi mathvariant="script">I</mi></mrow><mrow class="MJX-TeXAtom-ORD"><mi>&#x03B8;<!-- θ --></mi></mrow></msub></math> is a positive-definite matrix
+<br/><br/>The value of <math xmlns="http://www.w3.org/1998/Math/MathML"><msub><mi>&#x03B8;<!-- θ --></mi><mrow class="MJX-TeXAtom-ORD"><mi>M</mi><mi>L</mi><mi>E</mi></mrow></msub></math> is on the interior of the parameter space
+</span>
+
+- Efficient - Estimates $\mathbf{\underline{\theta}}=\theta_{1},\theta_{2},...$ in the "best-manner"
+    
+- Consistent - $\text{as}\;n\rightarrow\infty, \;\;f(\hat{\theta}_{_{MLE}}\xrightarrow{L}\theta)$
+
+]
+
+.panel[.panel-name[Properties]
+
+The likelihood is equal to the joint probability of the data
+
+$$\mathscr{L}(\underline{\theta}|\underline{x})=\sum_{i=1}^{n}\mathscr{L}_{i}(\underline{\theta}|x_i)=f(\underline{x}|\underline{\theta})=\prod_{i=1}^{n}f(x_{i}|\underline{\theta}),\;\;\text{if}\;x_{i}\; iid$$
+
+Properties of the Likelihood Function $\mathscr{L}$
+
+1. $\mathscr{L}(\theta|\underline{x})\ge 0$
+
+2. $\mathscr{L}(\theta|\underline{x})$ is not a pdf i.e. $\int \mathscr{L}(\theta|\underline{x})\;d\theta \ne 1$
+
+3. Suggests (relatively) which values of $\theta$ are more likely to have generated the observed data $\underline{x}$ (assuming the chosen parametric model is correct)
+
+4. If it exists, we say that the value of $\underline{\theta}$ that maximizes $\mathscr{L}(\underline{\theta}|\underline{x})$ is the maximum likelihood estimator (denoted $\hat{\theta}_{_{MLE}}$)
+
+5. We often try to find $\hat{\theta}_{_{MLE}}$ by maximizing the log-likelihood function $\mathcal{L}(\underline{\theta}|\underline{x})=\log\Big(\mathscr{L}(\underline{\theta}|\underline{x})\Big)$
+
+]
+
+.panel[.panel-name[Definition]
+
+Both $f(t|\underline{\theta})$ and $\mathscr(\underline{\theta})$ start with a distributional assumption
+
+.pull-left[
+
+$f(\underline{x}|\underline{\theta})$ 
+
+- Returns the probability of observing data $\underline{x}=x_1,...,x_n, \;\;n\in(1,\infty)$ from a specified distribution $f(x|\theta)$ <span class="explain"></span><span class="tooltip"><b><u>This statement comes with two assumptions</u></b><br/><br/>1. We know (or at least have specified) a functional form values for $\theta$<br/><br/>2. We know (or at least have specified) values for $\theta$</span>
+
+- Is a function of $\underline{x}$ assuming $\underline{\theta}=\theta_{1},\theta_{2},...$ are <focus>known</focus>
+
+- What data $\underline{x}$ are most likely to be produced by a distribution with parameters $\underline{\theta}$?
+
+- $f(x_i|\underline{\theta})$ is the probability density associated with observation $x_i$
+
+]
+
+.pull-right[
+
+$\mathscr{L}(\underline{\theta}|\underline{x})$ 
+
+- Returns the likelihood that $\underline{\theta}$ are the parameters that produced $\underline{x}=x_1,...,x_n, \;\;n\in(1,\infty)$ from a specified distribution of the form $f(x|\theta)$
+
+- Is a function of $\underline{\theta}$ assuming $\underline{x}=x_{1},...,x_{n}$ has already been observed
+
+- What values of $\underline{\theta}$ are most likely to have produced $\underline{x}$?
+
+]
+
+]
+
+.panel[.panel-name[Definitions 2]
+
+The Likelihood Function and Its Maximum
+
+- The value of the likelihood function $\mathscr{L}(\underline{\theta}|\underline{t})$ depends on
+
+    1. The assumed parametric model
+    2. The observed data
+
+- The total likelihood is comprised of the contributions from every observation
+
+    + For observations $t_i, i = 1,\cdots,n$, the model with the highest joint probability is the model that is most likely to have generated the observations
+    + For a single observation, the model providing the greatest contribution to the total likelihood may not be the correct model
+    + As the number of observatons is increased, more information is obtained and it becomes easier to differentiate which model best-fits the data and best describes the underlying failure process 
+
+]
+
+.panel[.panel-name[Reliability Data]
+
+Likelihood Contributions For Reliability Data
+
+- For failure data, each observation makes one of four contributions to the likelihood function
+
+$$\mathscr{L}_{i}(\underline{\theta}|t_{i})=\begin{cases} S(t_{i}) &\mbox{for a right censored observation}\\F(t_{i}) &\mbox{for a left censored observation}\\F(t_{i})-F(t_{i-1}) &\mbox{for an interval censored observation}\\\lim\limits_{\Delta_i\rightarrow 0} \frac{(F(t_{i})-\Delta_{i})-F(t_{i})}{\Delta_{i}} &\mbox{for an exact" observation}\end{cases}$$
+
+- Thus, the total likelihood function may be expressed as
+
+$$\mathscr{L}(\underline{\theta}|\underline{t})=C\prod_{i=1}^{n} \mathscr{L}_{i}(\underline{\theta}|t_i)
+=C\prod_{i=1}^{m+1}\Big(F(t_{i})\Big)^{l_{i}}\Big(F(t_{i})-F(t_{i-1})\Big)^{d_{i}}\Big(1-F(t_{i})\Big)^{r_{i}}$$
+
+- where
+
+    + $l_i=1$ if $t_i$ is a left censored observation (0 otherwise)
+    + $d_i=1$ if $t_i$ is an interval censored observation (0 otherwise)
+    + $r_i=1$ if $t_i$ is a right censored observation (0 otherwise)
+    + $n = \sum_{j=1}^{m+1}(l_{j}+d_{j}+r_{j})$
+
+]
+]
+
+
+---
+## img
+
+<img src="https://lh3.googleusercontent.com/-14JBhtF5kh49PxT6QiwgQCcwhc07tBXpjxKxTQzwywhJQigkeQ53WcG1pr6Vo484hJqn1J6hPayZ73qU1n9Ji-j0tikBz0AFiqINkjMKY5KJbln2WmdnG3lZhOKGWk_BOSV0qXQX4E=w1920-h1080">
