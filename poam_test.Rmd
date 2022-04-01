@@ -1,0 +1,328 @@
+---
+title: "KC-135 All-In POA&M Review"
+#author: "Jason Freels"
+date: "`r format(Sys.Date(), '%d %b %Y')`"
+output:
+  xaringan::moon_reader:
+    css: ["default",
+          "css/xaringan.css",
+          "css/font-awesome-animation.min.css",
+          "css/scrollable.css"]
+    self_contained: true
+    lib_dir: libs
+    chakra: libs/remark-latest-min.js
+    seal: no
+    nature:
+      ratio: '16:9'
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+    yolo: false
+---
+class: inverse, left, bottom, hide_logo
+<!--background-image: url("images/U.S.-Air-Force.jpg")-->
+<!-- background-image: url("images/rso.png") -->
+<!-- background-position: top, left -->
+<!-- background-size: 50 -->
+
+# KC-135 All-In POA&M Review
+
+```{r setup, include=FALSE, cache=FALSE}
+# Set global R options
+options(htmltools.dir.version = FALSE, servr.daemon = TRUE)
+# Set global knitr chunk options
+knitr::opts_chunk$set(
+  fig.align = "center",
+  cache = !TRUE,
+  error = FALSE,
+  message = FALSE,
+  warning = FALSE,
+  collapse = TRUE ,
+  echo = F
+)
+# set ggplot to black and white theme
+#library(highcharter)
+library(xaringanExtra)
+xaringanExtra::use_panelset()
+library(ggplot2)
+library(DT)
+#library(SMRD)
+library(knitcitations)
+knitcitations::cite_options(cite.style = "authoryear")
+theme_set(theme_bw())
+root = rprojroot::find_root(rprojroot::is_git_root)
+
+library(readxl)
+library(knitr)
+library(kableExtra)
+library(dplyr)
+.file <- "C:\\Users\\1073742699E\\OneDrive - United States Air Force\\CBM+\\KC-135\\20220329 KC-135 ALL IN TOP 30 POA&M_1.xlsx"
+.dats <- read_excel(.file, sheet = 1)
+.supply <- read_excel(.file, sheet = "Supply")
+q = 0
+```
+
+```{r}
+overview_cols <- c(
+#"WUC",
+#"NSN",
+#"Noun",
+"Current Unofficial Ranking\r\n(Awaiting SPO Validation)",
+"Rank May 2021\r\nUsed to Update KC-135 Parts Tracker",
+"Rank Dec 2020\r\nUsed to Develop Skittle Chart",
+"Currently Fielded CBM+",
+"Need to Conduct Constraint Analyses",
+"Components going forward on POA&Ms",
+"Included in PAVCON RCA",
+#"Constraints & Action Plan From Aug-21 Mtg",
+#"Lead_Office",
+#"Lead_POC",
+#"POA&M Objective Narrative",
+#"T&R to Overhaul Milestones",
+#"Contract Language Milestones",
+#"Planned Modification Milestones",
+#"Supply Constraints Milestones",
+#"Reliability Milestones",
+#"POA&M Completion Date",
+#"SOR\r\nSpecific Organic ALC\r\nSpecific Contractor",
+"Repair Concept",
+"Contract Repair",
+"USAF Repair Contract No.",
+"DLA Contract No.",
+"Contracting Officer",
+"Contract notes",
+#"Award Date",
+"Contract Expiration Date",
+"Contracting Organization",
+"PR Status",
+#"WSLO Notes",
+"Repair Contractor",
+"LMS",
+"PMS",
+"IM",
+"ES"
+#"Constraints",
+#"Get Well Solution",
+#"Rating"
+)
+
+oc_num <- which(colnames(.dats) %in% overview_cols)
+
+constraints <- c("Reliability",
+"T&R",
+"Supply",
+"Mod",
+"TBD", 
+"Rating"
+)
+
+con_num <- which(colnames(.dats) %in% constraints)
+```
+
+
+---
+#### `r q=q+1;.dats$Noun[q]`<br/>WUC: `r .dats$WUC[q]` NSN: `r .dats$NSN[q]`<br/>AO: `r .dats$Lead_POC[q]`, `r .dats$Lead_Office[q]` 
+.panelset[
+  .panel[.panel-name[Overview]
+
+```{r}
+.df <- data.frame(.dats[q,overview_cols])
+colnames(.df) <- colnames(.dats)[oc_num]
+DT::datatable(t(.df), 
+              options = list(pageLength = 7, 
+                             searching = FALSE,
+                             lengthChange = F,
+                             headerCallback = JS(
+              "function(thead, data, start, end, display){",
+              "  $(thead).remove();",
+              "}")))
+```
+
+  ]
+
+.panel[.panel-name[Reliability]
+
+.scrollable[
+
+Root Cause: `r .supply$Constraint_Root_Cause[q]`
+
+Issue(s): `r .supply$Issue[q]`
+
+Risk(s): `r .supply$Risks[q]`
+
+Risk Mitigation: `r .supply$Risk_Mitigation[q]`
+
+Plans
+
+`r .supply$Plans[q]`
+
+]
+
+]
+
+.panel[.panel-name[Supply]
+
+<div style="overflow-x: hidden; overflow-y: auto;">
+
+Root Cause: `r .supply$Constraint_Root_Cause[q]`
+
+Issue(s): `r .supply$Issue[q]`
+
+Risk(s): `r .supply$Risks[q]`
+
+Risk Mitigation: `r .supply$Risk_Mitigation[q]`
+
+Plans
+
+`r .supply$Plans[q]`
+
+</div>
+
+]
+
+
+.panel[.panel-name[Test & Repair]
+
+]
+
+.panel[.panel-name[Modification]
+
+]
+
+.panel[.panel-name[Contracting]
+
+]
+
+.panel[.panel-name[Overall]
+
+]
+]
+
+<div style="position:absolute; width:70%; margin:0 auto; bottom:5%; left:15%;">
+```{r}
+.df2 <- data.frame(constraints, row.names = NULL)
+colnames(.df2) <- NULL
+knitr::kable(t(.df2)) %>% 
+  column_spec(1,
+              background = case_when(.dats$Reliability[q] == "x" ~ "red", TRUE ~ "white")) %>%
+  column_spec(2,
+              background = case_when(.dats$`T&R`[q] == "x" ~ "red", TRUE ~ "white")) %>%
+  column_spec(3,
+              background = case_when(.dats$Supply[q] == "x" ~ "red", TRUE ~ "white")) %>%
+  column_spec(4,
+              background = case_when(.dats$Mod[q] == "x" ~ "red", TRUE ~ "white")) %>%
+  column_spec(5,
+              background = case_when(.dats$TBD[q] == "x" ~ "red", TRUE ~ "white"))%>%
+  column_spec(6,
+              background = case_when(.dats$Rating[q] == "x" ~ "red", TRUE ~ "white"))%>%
+  kable_styling(font_size = 24, 
+                full_width = T, 
+                htmltable_class = "lightable-material")
+```
+</div>
+
+---
+#### `r q=q+1;.dats$Noun[q]`<br/>WUC: `r .dats$WUC[q]` NSN: `r .dats$NSN[q]`<br/>AO: `r .dats$Lead_POC[q]`, `r .dats$Lead_Office[q]` 
+.panelset[
+  .panel[.panel-name[Overview]
+
+```{r}
+.df <- data.frame(.dats[q,overview_cols])
+colnames(.df) <- colnames(.dats)[oc_num]
+DT::datatable(t(.df), options = list(pageLength = 5, searching = FALSE))
+```
+
+  ]
+
+.panel[.panel-name[Milestones]
+
+]
+
+.panel[.panel-name[Other stuff]
+
+]
+
+.panel[.panel-name[More Other Stuff]
+
+]
+]
+
+<div style="position:absolute; width:70%; margin:0 auto; bottom:5%; left:15%;">
+```{r}
+.df2 <- data.frame(constraints, row.names = NULL)
+colnames(.df2) <- NULL
+knitr::kable(t(.df2)) %>% 
+  column_spec(1,
+              background = case_when(.dats$Reliability[q] == "x" ~ "red", TRUE ~ "white")) %>%
+  column_spec(2,
+              background = case_when(.dats$`T&R`[q] == "x" ~ "red", TRUE ~ "white")) %>%
+  column_spec(3,
+              background = case_when(.dats$Supply[q] == "x" ~ "red", TRUE ~ "white")) %>%
+  column_spec(4,
+              background = case_when(.dats$Mod[q] == "x" ~ "red", TRUE ~ "white")) %>%
+  column_spec(5,
+              background = case_when(.dats$TBD[q] == "x" ~ "red", TRUE ~ "white"))%>%
+  column_spec(6,
+              background = case_when(.dats$Rating[q] == "x" ~ "red", TRUE ~ "white"))%>%
+  kable_styling(font_size = 24, 
+                full_width = T, 
+                htmltable_class = "lightable-material")
+```
+</div>
+
+---
+#### `r q=q+1;.dats$Noun[q]`<br/>WUC: `r .dats$WUC[q]` NSN: `r .dats$NSN[q]`<br/>AO: `r .dats$Lead_POC[q]`, `r .dats$Lead_Office[q]` 
+.panelset[
+  .panel[.panel-name[Overview]
+
+```{r}
+.df <- data.frame(.dats[q,overview_cols])
+colnames(.df) <- colnames(.dats)[oc_num]
+DT::datatable(t(.df), options = list(pageLength = 5, searching = FALSE))
+```
+
+  ]
+
+.panel[.panel-name[Milestones]
+
+]
+
+.panel[.panel-name[Other stuff]
+
+]
+
+.panel[.panel-name[More Other Stuff]
+
+]
+]
+
+<div style="position:absolute; width:70%; margin:0 auto; bottom:5%; left:15%;">
+```{r}
+.df2 <- data.frame(constraints, row.names = NULL)
+colnames(.df2) <- NULL
+knitr::kable(t(.df2)) %>% 
+  column_spec(1,
+              background = case_when(.dats$Reliability[q] == "x" ~ "red", TRUE ~ "white")) %>%
+  column_spec(2,
+              background = case_when(.dats$`T&R`[q] == "x" ~ "red", TRUE ~ "white")) %>%
+  column_spec(3,
+              background = case_when(.dats$Supply[q] == "x" ~ "red", TRUE ~ "white")) %>%
+  column_spec(4,
+              background = case_when(.dats$Mod[q] == "x" ~ "red", TRUE ~ "white")) %>%
+  column_spec(5,
+              background = case_when(.dats$TBD[q] == "x" ~ "red", TRUE ~ "white"))%>%
+  column_spec(6,
+              background = case_when(.dats$Rating[q] == "x" ~ "red", TRUE ~ "white"))%>%
+  kable_styling(font_size = 24, 
+                full_width = T, 
+                htmltable_class = "lightable-material")
+```
+</div>
+
+
+---
+## References
+
+```{r, results='asis', comment=NA}
+bibliography(bib.style = "authoryear")
+```
