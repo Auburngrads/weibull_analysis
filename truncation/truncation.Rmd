@@ -1,0 +1,142 @@
+---
+title: "Modeling failure data with right censoring and left truncation"
+author: "Jason Freels"
+date: "4/11/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(SMRD)
+library(fitdistrplus)
+```
+
+## Background
+
+All distribution have a support region, or the region over which the distribution is defined.  For example:
+
+- The support region for the Normal distribution $Normal(\mu, \sigma)$ is all real numbers i.e. $\{x \in \Bbb{R} \mid -\infty<x<\infty\}$
+- The support region for the beta distribution $Beta(\alpha, \beta)$ is all real number between 0 and 1 i.e. $\{x \in \Bbb{R} \mid 0\le x \le1\}$
+- The support region for the Poisson distribution $Poisson(\lambda)$ is all positive integers i.e. $\{x \in \Bbb{N} \mid x \ge 1\}$
+- The support region for the Weibull distribution $Weibull(\eta, \beta$) is all positive real numbers  $\{x \in \Bbb{R} \mid 0\le x<\infty\}$
+
+As such, the pdf and cdf for the Weibull distribution is expressed as:
+
+$$
+\begin{aligned}
+F(t\mid\eta, \beta) &= 1-\exp \bigg[-\bigg(\frac{t}{\eta}\bigg)^{\beta}\bigg]& t \ge 0,\;\beta\gt0,\; \eta\gt0\\\\
+f(t\mid\eta, \beta) &= \frac{\beta}{\eta}\bigg(\frac{t}{\eta}\bigg)^{\beta-1}\exp \bigg[-\bigg(\frac{t}{\eta}\bigg)^{\beta}\bigg]& t \ge 0,\;\beta\gt0,\; \eta\gt0
+\end{aligned}
+$$
+
+Oftentimes the details on the right, showing the values over which the variables $t, \beta, \text{ and } \eta$ are defined - are ommitted.  However, this is bad practice as it can be important in certain circumstances - such as this one.
+
+
+$$
+f(t\mid\eta, \beta, \gamma) = \frac{\beta}{\eta}\bigg(\frac{t-\gamma}{\eta}\bigg)^{\beta-1}\exp \bigg[-\bigg(\frac{t-\gamma}{\eta}\bigg)^{\beta}\bigg] \quad t \ge 0,\;\beta\gt0,\; \eta\gt0,\; \gamma \gt0
+$$
+
+$$
+\begin{aligned}
+f(t\mid\eta, \beta) &= \frac{\frac{\beta}{\eta}\bigg(\frac{t}{\eta}\bigg)^{\beta-1}\exp \bigg[-\bigg(\frac{t}{\eta}\bigg)^{\beta}\bigg]}{F(\infty\mid\eta,\beta) - F(\mu\mid\eta,\beta)}&\quad t \ge \mu,\;\beta\gt0,\; \eta\gt0\\\\
+&= \frac{\frac{\beta}{\eta}\bigg(\frac{t}{\eta}\bigg)^{\beta-1}\exp \bigg[-\bigg(\frac{t}{\eta}\bigg)^{\beta}\bigg]}{S(\mu\mid\eta,\beta)}&\quad t \ge \mu,\;\beta\gt0,\; \eta\gt0
+\end{aligned}
+$$
+
+$$
+\begin{aligned}
+f(t\mid\eta, \beta) &= \frac{\frac{\beta}{\eta}\bigg(\frac{t}{\eta}\bigg)^{\beta-1}\exp \bigg[-\bigg(\frac{t}{\eta}\bigg)^{\beta}\bigg]}{F(t=\infty\mid\eta,\beta) - F(t = 0\mid\eta,\beta)}&\quad t \ge 0,\;\beta\gt0,\; \eta\gt0\\\\
+ &= \frac{\frac{\beta}{\eta}\bigg(\frac{t}{\eta}\bigg)^{\beta-1}\exp \bigg[-\bigg(\frac{t}{\eta}\bigg)^{\beta}\bigg]}{1 - 0}&\quad t \ge 0,\;\beta\gt0,\; \eta\gt0\\\\
+  &= \frac{\beta}{\eta}\bigg(\frac{t}{\eta}\bigg)^{\beta-1}\exp \bigg[-\bigg(\frac{t}{\eta}\bigg)^{\beta}\bigg]&\quad t \ge 0,\;\beta\gt0,\; \eta\gt0
+\end{aligned}
+$$
+
+```{r}
+.N    = c(57.0,  159.0)
+.beta = c(0.73,    2.8)
+.eta  = c(50.0, 1400.0)
+.gamma = 200
+
+
+.times <- c(rweibull(.N[1], shape = .beta[1], scale = .eta[1]),
+            rweibull(.N[2], shape = .beta[2], scale = .eta[2]))
+
+# fit basic data
+.fdp1 <- fitdist(.times, distr = "weibull")
+.fsm1 <- mlest(frame.to.ld(data.frame(times = .times), response.column = 1), "weibull")
+
+(.params1 <- rbind(fitdist = .fdp1$estimate, smrd = .fsm1$mle.table[4:3,1]))
+
+# fit truncated data
+.times2 <- .times[((.times - .gamma) >= 0)]
+
+.df2 <- data.frame(time = .times2, 
+                  trunctime = rep(.gamma, length(.times2)),
+                  trunctype = rep("left", length(.times2)))
+
+.fdp2 <- fitdist(.times2 - .gamma, distr = "weibull")
+.fsm2 <- mlest(frame.to.ld(.df2, response.column = 1, truncation.type.column = 3, truncation.response.column = 2), "weibull")
+
+(.params2 <- rbind(location = .fdp2$estimate, truncation = .fsm2$mle.table[4:3,1]))
+```
+
+
+
+```{r}
+.f_location <- function(.t, .gamma, params) {
+  
+  .beta = params[1]
+  .eta  = params[2]
+  
+  j.prob = sum(log(.beta / (.t - .gamma) * ((.t - .gamma) / .eta) ** (.beta) * exp(-1 * ((.t - .gamma) / .eta) ** (.beta))))
+  
+  return(-1*j.prob)
+  
+}
+
+.f4 <- function(.t, params, .gamma) {
+  
+  t1 = log(params[1] / (.t - .gamma)) 
+  t2 = log(((.t - .gamma) / params[2]) ** (params[1]))
+  t3 = -1 * ((.t - .gamma) / params[2]) ** (params[1])
+  j.prob = sum(t1+t2+t3)
+  
+  return(-1*j.prob)
+  
+}
+
+.f_truncate <- function(.t, params, .gamma) {
+  
+  .beta = params[1]
+  .eta  = params[2]
+  
+  t1 = log(.beta / (.t)) 
+  t2 = log(((.t) / .eta) ** (.beta))
+  t3 = -1 * ((.t) / .eta) ** (.beta)
+  t4 = -1 * ((.gamma) / .eta) ** (.beta)
+  
+  j.prob = sum((t1+t2+t3)-t4)
+  
+  return(-1*j.prob)
+  
+}
+```
+
+
+```{r}
+nlminb(start = c(.5, 38), 
+       objective = .f_location, 
+       .t = .times2, 
+       .gamma = .gamma,
+       lower = c(0.5,0.5))
+```
+
+```{r}
+nlminb(start = c(.5, 38), 
+       objective = .f_truncate, 
+       .t = .times2, 
+       .gamma = .gamma,
+       lower = c(0.5,0.5))
+```
+
