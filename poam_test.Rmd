@@ -6,8 +6,7 @@ output:
   xaringan::moon_reader:
     css: ["default",
           "css/xaringan.css",
-          "css/font-awesome-animation.min.css",
-          "css/scrollable.css"]
+          "css/font-awesome-animation.min.css"]
     self_contained: true
     lib_dir: libs
     chakra: libs/remark-latest-min.js
@@ -48,6 +47,7 @@ library(ggplot2)
 library(DT)
 #library(SMRD)
 library(knitcitations)
+library(glue)
 knitcitations::cite_options(cite.style = "authoryear")
 theme_set(theme_bw())
 root = rprojroot::find_root(rprojroot::is_git_root)
@@ -56,7 +56,7 @@ library(readxl)
 library(knitr)
 library(kableExtra)
 library(dplyr)
-.file <- "C:\\Users\\1073742699E\\OneDrive - United States Air Force\\CBM+\\KC-135\\20220329 KC-135 ALL IN TOP 30 POA&M_1.xlsx"
+.file <- file.path(root,"data","20220329 KC-135 ALL IN TOP 30 POA&M_1.xlsx")
 .dats <- read_excel(.file, sheet = 1)
 .supply <- read_excel(.file, sheet = "Supply")
 q = 0
@@ -109,7 +109,7 @@ overview_cols <- c(
 oc_num <- which(colnames(.dats) %in% overview_cols)
 
 constraints <- c("Reliability",
-"T&R",
+"Test_and_Repair",
 "Supply",
 "Mod",
 "TBD", 
@@ -119,206 +119,65 @@ constraints <- c("Reliability",
 con_num <- which(colnames(.dats) %in% constraints)
 ```
 
+---
+`r q=q+1`
+```{r, child="poam_template.Rmd"}
+```
 
 ---
-#### `r q=q+1;.dats$Noun[q]`<br/>WUC: `r .dats$WUC[q]` NSN: `r .dats$NSN[q]`<br/>AO: `r .dats$Lead_POC[q]`, `r .dats$Lead_Office[q]` 
-.panelset[
-  .panel[.panel-name[Overview]
-
-```{r}
-.df <- data.frame(.dats[q,overview_cols])
-colnames(.df) <- colnames(.dats)[oc_num]
-DT::datatable(t(.df), 
-              options = list(pageLength = 7, 
-                             searching = FALSE,
-                             lengthChange = F,
-                             headerCallback = JS(
-              "function(thead, data, start, end, display){",
-              "  $(thead).remove();",
-              "}")))
+`r q=q+1`
+```{r, child="poam_template.Rmd"}
 ```
-
-  ]
-
-.panel[.panel-name[Reliability]
-
-.scrollable[
-
-Root Cause: `r .supply$Constraint_Root_Cause[q]`
-
-Issue(s): `r .supply$Issue[q]`
-
-Risk(s): `r .supply$Risks[q]`
-
-Risk Mitigation: `r .supply$Risk_Mitigation[q]`
-
-Plans
-
-`r .supply$Plans[q]`
-
-]
-
-]
-
-.panel[.panel-name[Supply]
-
-<div style="overflow-x: hidden; overflow-y: auto;">
-
-Root Cause: `r .supply$Constraint_Root_Cause[q]`
-
-Issue(s): `r .supply$Issue[q]`
-
-Risk(s): `r .supply$Risks[q]`
-
-Risk Mitigation: `r .supply$Risk_Mitigation[q]`
-
-Plans
-
-`r .supply$Plans[q]`
-
-</div>
-
-]
-
-
-.panel[.panel-name[Test & Repair]
-
-]
-
-.panel[.panel-name[Modification]
-
-]
-
-.panel[.panel-name[Contracting]
-
-]
-
-.panel[.panel-name[Overall]
-
-]
-]
-
-<div style="position:absolute; width:70%; margin:0 auto; bottom:5%; left:15%;">
-```{r}
-.df2 <- data.frame(constraints, row.names = NULL)
-colnames(.df2) <- NULL
-knitr::kable(t(.df2)) %>% 
-  column_spec(1,
-              background = case_when(.dats$Reliability[q] == "x" ~ "red", TRUE ~ "white")) %>%
-  column_spec(2,
-              background = case_when(.dats$`T&R`[q] == "x" ~ "red", TRUE ~ "white")) %>%
-  column_spec(3,
-              background = case_when(.dats$Supply[q] == "x" ~ "red", TRUE ~ "white")) %>%
-  column_spec(4,
-              background = case_when(.dats$Mod[q] == "x" ~ "red", TRUE ~ "white")) %>%
-  column_spec(5,
-              background = case_when(.dats$TBD[q] == "x" ~ "red", TRUE ~ "white"))%>%
-  column_spec(6,
-              background = case_when(.dats$Rating[q] == "x" ~ "red", TRUE ~ "white"))%>%
-  kable_styling(font_size = 24, 
-                full_width = T, 
-                htmltable_class = "lightable-material")
-```
-</div>
 
 ---
-#### `r q=q+1;.dats$Noun[q]`<br/>WUC: `r .dats$WUC[q]` NSN: `r .dats$NSN[q]`<br/>AO: `r .dats$Lead_POC[q]`, `r .dats$Lead_Office[q]` 
-.panelset[
-  .panel[.panel-name[Overview]
-
-```{r}
-.df <- data.frame(.dats[q,overview_cols])
-colnames(.df) <- colnames(.dats)[oc_num]
-DT::datatable(t(.df), options = list(pageLength = 5, searching = FALSE))
+`r q=q+1`
+```{r, child="poam_template.Rmd"}
 ```
-
-  ]
-
-.panel[.panel-name[Milestones]
-
-]
-
-.panel[.panel-name[Other stuff]
-
-]
-
-.panel[.panel-name[More Other Stuff]
-
-]
-]
-
-<div style="position:absolute; width:70%; margin:0 auto; bottom:5%; left:15%;">
-```{r}
-.df2 <- data.frame(constraints, row.names = NULL)
-colnames(.df2) <- NULL
-knitr::kable(t(.df2)) %>% 
-  column_spec(1,
-              background = case_when(.dats$Reliability[q] == "x" ~ "red", TRUE ~ "white")) %>%
-  column_spec(2,
-              background = case_when(.dats$`T&R`[q] == "x" ~ "red", TRUE ~ "white")) %>%
-  column_spec(3,
-              background = case_when(.dats$Supply[q] == "x" ~ "red", TRUE ~ "white")) %>%
-  column_spec(4,
-              background = case_when(.dats$Mod[q] == "x" ~ "red", TRUE ~ "white")) %>%
-  column_spec(5,
-              background = case_when(.dats$TBD[q] == "x" ~ "red", TRUE ~ "white"))%>%
-  column_spec(6,
-              background = case_when(.dats$Rating[q] == "x" ~ "red", TRUE ~ "white"))%>%
-  kable_styling(font_size = 24, 
-                full_width = T, 
-                htmltable_class = "lightable-material")
-```
-</div>
 
 ---
-#### `r q=q+1;.dats$Noun[q]`<br/>WUC: `r .dats$WUC[q]` NSN: `r .dats$NSN[q]`<br/>AO: `r .dats$Lead_POC[q]`, `r .dats$Lead_Office[q]` 
-.panelset[
-  .panel[.panel-name[Overview]
-
-```{r}
-.df <- data.frame(.dats[q,overview_cols])
-colnames(.df) <- colnames(.dats)[oc_num]
-DT::datatable(t(.df), options = list(pageLength = 5, searching = FALSE))
+`r q=q+1`
+```{r, child="poam_template.Rmd"}
 ```
 
-  ]
-
-.panel[.panel-name[Milestones]
-
-]
-
-.panel[.panel-name[Other stuff]
-
-]
-
-.panel[.panel-name[More Other Stuff]
-
-]
-]
-
-<div style="position:absolute; width:70%; margin:0 auto; bottom:5%; left:15%;">
-```{r}
-.df2 <- data.frame(constraints, row.names = NULL)
-colnames(.df2) <- NULL
-knitr::kable(t(.df2)) %>% 
-  column_spec(1,
-              background = case_when(.dats$Reliability[q] == "x" ~ "red", TRUE ~ "white")) %>%
-  column_spec(2,
-              background = case_when(.dats$`T&R`[q] == "x" ~ "red", TRUE ~ "white")) %>%
-  column_spec(3,
-              background = case_when(.dats$Supply[q] == "x" ~ "red", TRUE ~ "white")) %>%
-  column_spec(4,
-              background = case_when(.dats$Mod[q] == "x" ~ "red", TRUE ~ "white")) %>%
-  column_spec(5,
-              background = case_when(.dats$TBD[q] == "x" ~ "red", TRUE ~ "white"))%>%
-  column_spec(6,
-              background = case_when(.dats$Rating[q] == "x" ~ "red", TRUE ~ "white"))%>%
-  kable_styling(font_size = 24, 
-                full_width = T, 
-                htmltable_class = "lightable-material")
+---
+`r q=q+1`
+```{r, child="poam_template.Rmd"}
 ```
-</div>
 
+---
+`r q=q+1`
+```{r, child="poam_template.Rmd"}
+```
+
+---
+`r q=q+1`
+```{r, child="poam_template.Rmd"}
+```
+
+---
+`r q=q+1`
+```{r, child="poam_template.Rmd"}
+```
+
+---
+`r q=q+1`
+```{r, child="poam_template.Rmd"}
+```
+
+---
+`r q=q+1`
+```{r, child="poam_template.Rmd"}
+```
+
+---
+`r q=q+1`
+```{r, child="poam_template.Rmd"}
+```
+
+---
+`r q=q+1`
+```{r, child="poam_template.Rmd"}
+```
 
 ---
 ## References

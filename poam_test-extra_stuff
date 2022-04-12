@@ -1,0 +1,101 @@
+<div style="position:absolute; width:70%; margin:0 auto; bottom:5%; left:15%;">
+```{r, eval=FALSE}
+.df2 <- data.frame(constraints, row.names = NULL)
+colnames(.df2) <- NULL
+knitr::kable(t(.df2)) %>%
+  column_spec(1,
+              background = case_when(.dats$Reliability[q] == "x" ~ "red", TRUE ~ "white")) %>%
+  column_spec(2,
+              background = case_when(.dats$`T&R`[q] == "x" ~ "red", TRUE ~ "white")) %>%
+  column_spec(3,
+              background = case_when(.dats$Supply[q] == "x" ~ "red", TRUE ~ "white")) %>%
+  column_spec(4,
+              background = case_when(.dats$Mod[q] == "x" ~ "red", TRUE ~ "white")) %>%
+  column_spec(5,
+              background = case_when(.dats$TBD[q] == "x" ~ "red", TRUE ~ "white"))%>%
+  column_spec(6,
+              background = case_when(.dats$Rating[q] == "x" ~ "red", TRUE ~ "white"))%>%
+  kable_styling(font_size = 24,
+                full_width = T,
+                htmltable_class = "lightable-material")
+```
+</div>
+
+
+---
+#### `r q=q+1;.dats$Noun[q]`<br/>WUC: `r .dats$WUC[q]` NSN: `r .dats$NSN[q]`<br/>AO: `r .dats$Lead_POC[q]`, `r .dats$Lead_Office[q]`
+.panelset[
+  .panel[.panel-name[Overview]
+
+
+<style>
+li#panelset_reliability { background-color: `r if(.dats$Reliability[q] %in% "x") glue::glue("red")` !important;}
+li#panelset_modification { background-color: `r if(.dats$Mod[q] %in% "x") glue::glue("red")` !important; }
+li#panelset_supply { background-color: `r if(.dats$Supply[q] %in% "x") glue::glue("red")` !important;}
+li#panelset_rating { background-color: `r if(.dats$Rating[q] %in% "x") glue::glue("red")` !important; }
+li#panelset_tbd { background-color: `r if(.dats$TBD[q] %in% "x") glue::glue("red")` !important;}
+li#panelset_test_and_repair { background-color: `r if(.dats$Test_and_Repair[q] %in% "x") glue::glue("red")` !important; }
+</style>
+
+
+```{r}
+.df <- data.frame(.dats[q,overview_cols])
+colnames(.df) <- colnames(.dats)[oc_num]
+DT::datatable(t(.df),
+              options = list(pageLength = 10,
+                             searching = FALSE,
+                             lengthChange = F,
+                             headerCallback = JS(
+              "function(thead, data, start, end, display){",
+              "  $(thead).remove();",
+              "}")))
+```
+
+  ]
+
+.panel[.panel-name[Reliability]
+
+Root Cause: `r .supply$Constraint_Root_Cause[q]`
+
+Issue(s): `r .supply$Issue[q]`
+
+Risk(s): `r .supply$Risks[q]`
+
+Risk Mitigation: `r .supply$Risk_Mitigation[q]`
+
+Plans
+
+`r .supply$Plans[q]`
+
+]
+
+.panel[.panel-name[Supply]
+
+- Root Cause: `r .supply$Constraint_Root_Cause[q]`
+- Issue(s): `r .supply$Issue[q]`
+- Risk(s): `r .supply$Risks[q]`
+- Risk Mitigation: `r .supply$Risk_Mitigation[q]`
+
+Plans
+
+`r .supply$Plans[q]`
+
+]
+
+
+.panel[.panel-name[Test & Repair]
+
+]
+
+.panel[.panel-name[Modification]
+
+]
+
+.panel[.panel-name[Contracting]
+
+]
+
+.panel[.panel-name[Overall]
+
+]
+]

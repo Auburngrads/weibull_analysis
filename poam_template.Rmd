@@ -1,0 +1,85 @@
+#### `r .dats$Noun[q]`<br/>WUC: `r .dats$WUC[q]` NSN: `r .dats$NSN[q]`<br/>AO: `r .dats$Lead_POC[q]`, `r .dats$Lead_Office[q]`
+.panelset[
+  .panel[.panel-name[Overview]
+
+```{r}
+c_r <- `if`(!is.na(.dats$Reliability[q]), glue("red"),glue("white"))
+c_m <- `if`(!is.na(.dats$Mod[q])        , glue("red"),glue("white"))
+c_s <- `if`(!is.na(.dats$Supply[q]), glue("red"), glue("white"))
+c_a <- `if`(!is.na(.dats$Rating[q]), glue("red"), glue("white"))
+c_b <- `if`(!is.na(.dats$TBD[q])   , glue("red"), glue("white"))
+c_t <- `if`(!is.na(.dats$Test_and_Repair[q]), glue("red"),glue("white"))
+p=ifelse(q==1, "", q-1)
+r=ifelse(q==1, "", q)
+```
+
+<style>
+li#`r glue("panelset{p}_reliability{r}")` { background-color: `r c_r` !important;}
+li#`r glue("panelset{p}_modification{r}")` { background-color: `r c_m` !important; }
+li#`r glue("panelset{p}_supply{r}")` { background-color: `r c_s` !important;}
+li#`r glue("panelset{p}_overall{r}")` { background-color: `r c_a` !important; }
+li#`r glue("panelset{p}_tbd{r}")` { background-color: `r c_b` !important;}
+li#`r glue("panelset{p}_test-and-repair{r}")` { background-color: `r c_t` !important; }
+</style>
+
+```{r}
+.df <- data.frame(.dats[q,overview_cols])
+colnames(.df) <- colnames(.dats)[oc_num]
+DT::datatable(t(.df),
+              options = list(pageLength = 10,
+                             searching = FALSE,
+                             lengthChange = F,
+                             headerCallback = JS(
+              "function(thead, data, start, end, display){",
+              "  $(thead).remove();",
+              "}")))
+```
+
+]
+
+.panel[.panel-name[Reliability]
+
+Root Cause: `r .supply$Constraint_Root_Cause[q]`
+
+Issue(s): `r .supply$Issue[q]`
+
+Risk(s): `r .supply$Risks[q]`
+
+Risk Mitigation: `r .supply$Risk_Mitigation[q]`
+
+Plans
+
+`r .supply$Plans[q]`
+
+]
+
+.panel[.panel-name[Supply]
+
+- Root Cause: `r .supply$Constraint_Root_Cause[q]`
+- Issue(s): `r .supply$Issue[q]`
+- Risk(s): `r .supply$Risks[q]`
+- Risk Mitigation: `r .supply$Risk_Mitigation[q]`
+
+Plans
+
+`r .supply$Plans[q]`
+
+]
+
+
+.panel[.panel-name[Test and Repair]
+
+]
+
+.panel[.panel-name[Modification]
+
+]
+
+.panel[.panel-name[Contracting]
+
+]
+
+.panel[.panel-name[Overall]
+
+]
+]
