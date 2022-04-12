@@ -1,0 +1,32 @@
+---
+title: "Untitled"
+author: "Me"
+date: "4/7/2022"
+output: html_document
+params:
+  scale: 9222
+  shape: 0.602
+  units: 1000
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+Fitted distribution is \[WEIB(\eta = `r params["scale"]`, \beta = `r params$shape`)\] using this we can simulate \[`r params$units`\] failure
+
+```{r cars}
+
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
