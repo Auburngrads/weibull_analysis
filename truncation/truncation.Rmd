@@ -2,6 +2,8 @@
 title: "Modeling failure data with right censoring and left truncation"
 author: "Jason Freels"
 date: "4/11/2022"
+header-includes:
+   - \usepackage{bbm}
 output: html_document
 ---
 
@@ -14,129 +16,1390 @@ library(fitdistrplus)
 
 ## Background
 
-All distribution have a support region, or the region over which the distribution is defined.  For example:
+All distributions have a support region - the region over which the random variable is defined.  For example:
 
 - The support region for the Normal distribution $Normal(\mu, \sigma)$ is all real numbers i.e. $\{x \in \Bbb{R} \mid -\infty<x<\infty\}$
 - The support region for the beta distribution $Beta(\alpha, \beta)$ is all real number between 0 and 1 i.e. $\{x \in \Bbb{R} \mid 0\le x \le1\}$
 - The support region for the Poisson distribution $Poisson(\lambda)$ is all positive integers i.e. $\{x \in \Bbb{N} \mid x \ge 1\}$
 - The support region for the Weibull distribution $Weibull(\eta, \beta$) is all positive real numbers  $\{x \in \Bbb{R} \mid 0\le x<\infty\}$
 
-As such, the pdf and cdf for the Weibull distribution is expressed as:
+As such, the pdf and cdf for the Weibull distribution are expressed as:
 
 $$
 \begin{aligned}
-F(t\mid\eta, \beta) &= 1-\exp \bigg[-\bigg(\frac{t}{\eta}\bigg)^{\beta}\bigg]& t \ge 0,\;\beta\gt0,\; \eta\gt0\\\\
-f(t\mid\eta, \beta) &= \frac{\beta}{\eta}\bigg(\frac{t}{\eta}\bigg)^{\beta-1}\exp \bigg[-\bigg(\frac{t}{\eta}\bigg)^{\beta}\bigg]& t \ge 0,\;\beta\gt0,\; \eta\gt0
+F(t;\;\eta, \beta) &= 1-\exp \bigg[-\bigg(\frac{t}{\eta}\bigg)^{\beta}\bigg]& t \ge 0,\;\beta\gt0,\; \eta\gt0\\\\
+f(t;\;\eta, \beta) &= \frac{\beta}{\eta}\bigg(\frac{t}{\eta}\bigg)^{\beta-1}\exp \bigg[-\bigg(\frac{t}{\eta}\bigg)^{\beta}\bigg]& t \ge 0,\;\beta\gt0,\; \eta\gt0
 \end{aligned}
 $$
 
-Oftentimes the details on the right, showing the values over which the variables $t, \beta, \text{ and } \eta$ are defined - are ommitted.  However, this is bad practice as it can be important in certain circumstances - such as this one.
+Oftentimes the details shown to the right of the function expressions are omitted. However, this is bad practice as these details show the values over which the random variable and the parameters are defined.  These details are omitted when we're referring to a model that is defined over the entire support region. However, these details become critical when the model is defined over a subset of the support region.
 
+## Three-parameter Weibull distribution
+
+The 3-parameter Weibull distribution, $Weibull(\beta, \eta, \gamma)$ is obtained by replacing $t$ in each function expression with $t - \gamma$.  The third parameter $\gamma$ is known as a [threshold](https://support.minitab.com/en-us/minitab/18/help-and-how-to/modeling-statistics/reliability/supporting-topics/distribution-models/distributions-with-threshold-parameters/#:~:text=%20What%20is%20a%20threshold%20parameter%3F%20%201,data%2C%20a%20negative%20%CE%B3%20indicates%20that...%20More%20){target="_blank"} parameter (sometimes also called a shift or location parameter) and serves to shift the entire distribution from the origin.  However, the support region for the three parameter Weibull is all positive real numbers, the same as that of the two parameter Weibull distribution.
 
 $$
-f(t\mid\eta, \beta, \gamma) = \frac{\beta}{\eta}\bigg(\frac{t-\gamma}{\eta}\bigg)^{\beta-1}\exp \bigg[-\bigg(\frac{t-\gamma}{\eta}\bigg)^{\beta}\bigg] \quad t \ge 0,\;\beta\gt0,\; \eta\gt0,\; \gamma \gt0
+f(t;\;\eta, \beta, \gamma) =
+\begin{cases}
+\frac{\beta}{\eta}\bigg(\frac{t-\gamma}{\eta}\bigg)^{\beta-1}\exp \bigg[-\bigg(\frac{t-\gamma}{\eta}\bigg)^{\beta}\bigg]&\quad t \ge \gamma,\;\beta\gt0,\; \eta\gt0,\; \gamma \gt0\\\\
+0&\quad t \lt \gamma,\;\beta\gt0,\; \eta\gt0,\; \gamma \gt0
+\end{cases}
 $$
+
+The value for the threshold parameter may be chosen by the analyst based on a prior understanding of the failure process or estimated from the data. Regardless, it's important to note that the three parameter Weibull is an unconditional distribution and $\gamma$ is, by definition, the time below which no failures are observed.
+
+## Truncated Weibull distribution
+
+Truncated distributions are used when an analyst chooses to restrict the distribution over a subset of the support region.  For example, medical studies that consider patients within a specified age range.  Distributions can be truncated in several ways, some of which include:
+
+- Left truncation - increasing the lower bound of the support region
+- Right truncation - decreasing the upper bound of the support region
+- Interval truncation - a combination of left and right truncation
+
+Note that truncating results in a conditional distribution, where the results are conditioned on the observations occurring within the reduced support region.  The expression below shows the form of a truncated Weibull distribution.  Note that the denominator in this expression is defined from $0$ to $\infty$ - the entire support region.  In this case no truncation is occurring and the denominator may be ignored as it resolves to $1$.  
 
 $$
 \begin{aligned}
-f(t\mid\eta, \beta) &= \frac{\frac{\beta}{\eta}\bigg(\frac{t}{\eta}\bigg)^{\beta-1}\exp \bigg[-\bigg(\frac{t}{\eta}\bigg)^{\beta}\bigg]}{F(\infty\mid\eta,\beta) - F(\mu\mid\eta,\beta)}&\quad t \ge \mu,\;\beta\gt0,\; \eta\gt0\\\\
-&= \frac{\frac{\beta}{\eta}\bigg(\frac{t}{\eta}\bigg)^{\beta-1}\exp \bigg[-\bigg(\frac{t}{\eta}\bigg)^{\beta}\bigg]}{S(\mu\mid\eta,\beta)}&\quad t \ge \mu,\;\beta\gt0,\; \eta\gt0
-\end{aligned}
-$$
-
-$$
-\begin{aligned}
-f(t\mid\eta, \beta) &= \frac{\frac{\beta}{\eta}\bigg(\frac{t}{\eta}\bigg)^{\beta-1}\exp \bigg[-\bigg(\frac{t}{\eta}\bigg)^{\beta}\bigg]}{F(t=\infty\mid\eta,\beta) - F(t = 0\mid\eta,\beta)}&\quad t \ge 0,\;\beta\gt0,\; \eta\gt0\\\\
+f(t;\;\eta, \beta) &= \frac{\frac{\beta}{\eta}\bigg(\frac{t}{\eta}\bigg)^{\beta-1}\exp \bigg[-\bigg(\frac{t}{\eta}\bigg)^{\beta}\bigg]}{F(t=\infty\mid\eta,\beta) - F(t = 0\mid\eta,\beta)}&\quad t \ge 0,\;\beta\gt0,\; \eta\gt0\\\\
  &= \frac{\frac{\beta}{\eta}\bigg(\frac{t}{\eta}\bigg)^{\beta-1}\exp \bigg[-\bigg(\frac{t}{\eta}\bigg)^{\beta}\bigg]}{1 - 0}&\quad t \ge 0,\;\beta\gt0,\; \eta\gt0\\\\
   &= \frac{\beta}{\eta}\bigg(\frac{t}{\eta}\bigg)^{\beta-1}\exp \bigg[-\bigg(\frac{t}{\eta}\bigg)^{\beta}\bigg]&\quad t \ge 0,\;\beta\gt0,\; \eta\gt0
 \end{aligned}
 $$
 
+When truncation is present, the denominator will not equal $1$ and this value serves as a normalization constant to ensure that the requirements of a valid probability function are met. The expression below shows the form of a Weibull distribution that is left-truncated at $\mu$ 
+ 
+$$
+\begin{aligned}
+f(t;\;\eta, \beta\mid t\ge\mu) &= \frac{\frac{\beta}{\eta}\bigg(\frac{t}{\eta}\bigg)^{\beta-1}\exp \bigg[-\bigg(\frac{t}{\eta}\bigg)^{\beta}\bigg]}{F(\infty\mid\eta,\beta) - F(\mu\mid\eta,\beta)}&\quad t \ge \mu,\;\beta\gt0,\; \eta\gt0,\; \mu\gt0\\\\
+&= \frac{\frac{\beta}{\eta}\bigg(\frac{t}{\eta}\bigg)^{\beta-1}\exp \bigg[-\bigg(\frac{t}{\eta}\bigg)^{\beta}\bigg]}{S(\mu\mid\eta,\beta)}&\quad t \ge \mu,\;\beta\gt0,\; \eta\gt0,\; \mu\gt0
+\end{aligned}
+$$
+
+Finally, we amend this distribution to incorporate both left truncation and right-censoring
+
+$$
+f(t;\;\eta, \beta\mid t\ge\mu) =\frac{\bigg[\frac{\beta}{\eta}\bigg(\frac{t}{\eta}\bigg)^{\beta-1}\bigg]^{(1-\delta)}
+\exp \bigg[-\bigg(\frac{t}{\eta}\bigg)^{\beta}\bigg]}{S(\mu\mid\eta,\beta)}
+\quad t \ge \mu,\;\beta\gt0,\; \eta\gt0,\; \mu\gt0
+$$
+
+where
+
+$$
+\underset{0:1}{\mathbb{\delta}}(t_i):=
+  \begin{cases}1~&{\text{ if}}~t_i\text{ is a censored obesrvation},\\
+  0~&{\text{ if}}~t_i\text{ is a failure}.
+  \end{cases}
+$$
+
+## Initial Walkthrough
+
+This section fits Weibull distributions to several simulated data sets. The code uses the `SMRD` package developed by Freels and Meeker to produce ML parameter estimates for 2- and 3-parameter Weibull distributions as well as Weibull distributions with left truncation and right censoring.  Moreover, a custom likelihood function is created to fit the data and compares the ML parameter estimates to those produced by the `SMRD`.
+
+The following code chunk shows the custom likelihood functions for the 3-parameter Weibull distribution with right censoring and the 2-parameter Weibull distribution with left-truncation and right censoring.  These functions will be fed to an optimization routine to determine the maximum likelihood parameter estimates 
+
 ```{r}
-.N    = c(57.0,  159.0)
-.beta = c(0.73,    2.8)
-.eta  = c(50.0, 1400.0)
-.gamma = 200
-
-
-.times <- c(rweibull(.N[1], shape = .beta[1], scale = .eta[1]),
-            rweibull(.N[2], shape = .beta[2], scale = .eta[2]))
-
-# fit basic data
-.fdp1 <- fitdist(.times, distr = "weibull")
-.fsm1 <- mlest(frame.to.ld(data.frame(times = .times), response.column = 1), "weibull")
-
-(.params1 <- rbind(fitdist = .fdp1$estimate, smrd = .fsm1$mle.table[4:3,1]))
-
-# fit truncated data
-.times2 <- .times[((.times - .gamma) >= 0)]
-
-.df2 <- data.frame(time = .times2, 
-                  trunctime = rep(.gamma, length(.times2)),
-                  trunctype = rep("left", length(.times2)))
-
-.fdp2 <- fitdist(.times2 - .gamma, distr = "weibull")
-.fsm2 <- mlest(frame.to.ld(.df2, response.column = 1, truncation.type.column = 3, truncation.response.column = 2), "weibull")
-
-(.params2 <- rbind(location = .fdp2$estimate, truncation = .fsm2$mle.table[4:3,1]))
-```
-
-
-
-```{r}
-.f_location <- function(.t, .gamma, params) {
+.f_location <- function(.t, .gamma, params, .delta) {
   
   .beta = params[1]
   .eta  = params[2]
   
-  j.prob = sum(log(.beta / (.t - .gamma) * ((.t - .gamma) / .eta) ** (.beta) * exp(-1 * ((.t - .gamma) / .eta) ** (.beta))))
+  t1 = log(.beta / (.eta))
+  t2 = (.beta - 1) * log((.t - .gamma) / .eta)
+  t3 = -1 * ((.t - .gamma) / .eta) ** (.beta)
+  
+  j.prob = sum((1-.delta) * (t1 + t2) + t3)
   
   return(-1*j.prob)
   
 }
 
-.f4 <- function(.t, params, .gamma) {
-  
-  t1 = log(params[1] / (.t - .gamma)) 
-  t2 = log(((.t - .gamma) / params[2]) ** (params[1]))
-  t3 = -1 * ((.t - .gamma) / params[2]) ** (params[1])
-  j.prob = sum(t1+t2+t3)
-  
-  return(-1*j.prob)
-  
-}
 
-.f_truncate <- function(.t, params, .gamma) {
+.f_truncate <- function(.t, params, .gamma, .delta) {
   
   .beta = params[1]
   .eta  = params[2]
   
   t1 = log(.beta / (.t)) 
-  t2 = log(((.t) / .eta) ** (.beta))
+  t2 = .beta * log(((.t) / .eta))
   t3 = -1 * ((.t) / .eta) ** (.beta)
   t4 = -1 * ((.gamma) / .eta) ** (.beta)
   
-  j.prob = sum((t1+t2+t3)-t4)
+  j.prob = sum(((1-.delta)*(t1+t2)+t3)-t4)
   
   return(-1*j.prob)
   
 }
 ```
 
+### Example 1
 
-```{r}
-nlminb(start = c(.5, 38), 
-       objective = .f_location, 
-       .t = .times2, 
-       .gamma = .gamma,
-       lower = c(0.5,0.5))
+The following subsections detail the process for creating the simulated data sets and fitting these data sets to the respective Weibull distributions
+
+#### Simulation control parameters
+
+```{r echo=!FALSE}
+# Store parameters used to control the data generation process
+limits <- data.frame(N = c(25L,200L),    # lower and upper limit for sample sizes
+                     B = c(.35,2.5),     # lower and upper limit for shape parameters (beta)
+                     E = c(35,4500),     # lower and upper limit for scale parameters (eta)
+                     G = c(100,300),     # lower and upper limit for threshold/truncation parameters
+                     C = c(0.3,0.7),     # lower and upper limit for proportion of censored observations
+                     L = c(0.25, 0.5))   # lower and upper bounds for optimization routine
 ```
 
+#### Simulate the data 
+
 ```{r}
-nlminb(start = c(.5, 38), 
-       objective = .f_truncate, 
-       .t = .times2, 
-       .gamma = .gamma,
-       lower = c(0.5,0.5))
+# Randomly number of sub-populations
+.subpops = sample(1:3, size = 1) 
+
+# sample N observations from each sub-population 
+.N    = sample(limits$N[1]:limits$N[2], size = .subpops)
+
+# sample shape and scale parameters for each sub-population
+.beta = runif(.subpops, min = limits$B[1], max = limits$B[2])
+.eta  = runif(.subpops, min = limits$E[1], max = limits$E[2])
+
+# sample threshold and truncation value
+.gamma = runif(1, 
+               min = limits$G[1], 
+               max = limits$G[2])
+
+# will this data set include censoring?
+.cens <- sample(c(T,F), size = 1)
+
+# create an empty vector of failure times
+.times <- c()
+
+# populate the failure vector
+for(i in 1:.subpops){
+  
+    .this <- rweibull(.N[i], shape = .beta[i], scale = .eta[i])
+    .times <- c(.times, .this)
+  
+}
+
+# Create a data.frame containing the failure times and censoring
+.Times <- data.frame(times = .times,
+                     censor = sample(c("right","failed"), 
+                                     size = sum(.N), 
+                                     prob = `if`(.cens,c(limits$C[1],limits$C[2]),c(0,1)), 
+                                     replace = T))
 ```
 
+#### Fit the two-parameter Weibull model without truncation
+
+```{r results='hide'}
+# fit the data using the SMRD package
+.fld1 <- frame.to.ld(.Times, 
+                     response.column = 1, 
+                     censor.column = 2)
+
+.fsm1 <- mlest(.fld1, "weibull")
+
+# fit the data using the custom likelihood function defined above
+.out = nlminb(start = c(.5, 38), 
+              objective = .f_location, 
+              .t = .Times$times,
+              .delta = ifelse(.Times$censor == "failed",0,1), 
+              .gamma = 0,
+              lower = c(limits$L[1],limits$L[2]))
+```
+
+
+```{r}
+# compare the results obtained from both methods
+(.params1 <- rbind(SMRD = .fsm1$mle.table[4:3,1], Custom = .out$par))
+```
+
+#### Fit the three-parameter Weibull model (with threshold parameter)
+
+```{r}
+# fit the data using the SMRD package
+.Times2 <- .Times3 <- subset(.Times, subset = (.times - .gamma) >= 0)
+
+.Times2$times <- .Times2$times - .gamma
+
+.fld2 <- frame.to.ld(.Times2, 
+                      response.column = 1, 
+                      censor.column = 2)
+
+.fsm2 <- mlest(.fld2, "weibull")
+
+# fit the data using the custom likelihood function defined above
+.out = nlminb(start = c(.5, 38), 
+              objective = .f_location, 
+              .t = .Times2$times + .gamma,
+              .delta = ifelse(.Times2$censor == "failed",0,1), 
+              .gamma = .gamma,
+              lower = c(0.5,0.5))
+
+# compare the results obtained from both methods
+(.params2 <- rbind(SMRD = .fsm2$mle.table[4:3,1], Custom = .out$par))
+```
+
+#### Fit the two-parameter Weibull model with truncation
+
+```{r}
+# fit the data to the truncated distribution using SMRD
+.Times3$trunctime = rep(.gamma, nrow(.Times2))
+.Times3$trunctype = rep("left", nrow(.Times2))
+
+.fld3 <- frame.to.ld(.Times3, 
+                      response.column = 1, 
+                      censor.column = 2,
+                      truncation.type.column = 4, 
+                      truncation.response.column = 3)
+
+.fsm3 <- mlest(.fld3, "weibull")
+
+# fit the data using the custom likelihood function defined above
+.out = nlminb(start = c(.5, 38), 
+              objective = .f_truncate, 
+              .t = .Times3$times,
+              .delta = ifelse(.Times3$censor == "failed",0,1),
+              .gamma = .gamma,
+              lower = c(limits$L[1],limits$L[2]))
+
+# compare the results obtained from both methods
+(.params3 <- rbind(SMRD = .fsm3$mle.table[4:3,1], Custom = .out$par))
+```
+
+#### Present the results
+
+Create a table of simulation details
+
+```{r, echo=FALSE}
+DT::datatable(data.frame(population = 1:.subpops,
+                         samples = .N,
+                         shape = round(.beta, digits = 4),
+                         scale = round(.eta, digits = 4),
+                         threshold = round(.gamma, digits = 4)))
+```
+
+Create plots showing the model fits. Starting at the top-left and moving clockwise the plots are:
+
+1. Non-parametric estimate of the CDF
+2. Model fit (2-parameter Weibull - no threshold parameter, no truncation) 
+3. Model fit (3-parameter Weibull - threshold parameter, no truncation)
+4. Model fit (2-parameter Weibull - no threshold parameter, left truncation)
+
+```{r, fig.width=10, fig.height=10}
+par(mfrow = c(2,2))
+plot(.fld1)
+mleprobplot(.fld1, distribution = "weibull")
+mleprobplot(.fld2, distribution = "weibull")
+mleprobplot(.fld3, distribution = "weibull")
+```
+
+## More Examples {.tabset}
+
+Under each tab below a new simulated data set was created and fit the respective distributions as was shown above.  The table shows the number of distinct sub-populations that comprise the data set along with the properties of each sub-population.  Note: in most instances (but not all) the left truncated Weibull distribution returns an improved reliability compared to the 3-parameter Weibull distribution.
+
+### Example 2
+
+```{r, results='hide', echo=FALSE}
+# Randomly sample simulation parameters
+# number of sub-populations
+.subpops = sample(1:3, size = 1) 
+
+# sample N observations for each sub population 
+.N    = sample(limits$N[1]:limits$N[2], size = .subpops)
+
+# sample shape and scale parameters
+.beta = runif(.subpops, min = limits$B[1], max = limits$B[2])
+.eta  = runif(.subpops, min = limits$E[1], max = limits$E[2])
+
+# sample threshold and truncation value
+.gamma = runif(1, 
+               min = limits$G[1], 
+               max = limits$G[2])
+
+# include censoring
+.cens <- sample(c(T,F), size = 1)
+
+# create an empty vector of failure times
+.times <- c()
+
+# populate the failure vector
+for(i in 1:.subpops){
+  
+    .this <- rweibull(.N[i], shape = .beta[i], scale = .eta[i])
+    .times <- c(.times, .this)
+  
+}
+
+# Create a data.frame with times and censoring
+.Times <- data.frame(times = .times,
+                     censor = sample(c("right","failed"), 
+                                     size = sum(.N), 
+                                     prob = `if`(.cens,c(0.3,0.7),c(0,1)), 
+                                     replace = T))
+```
+
+```{r, echo=FALSE}
+# fit basic data
+.fld1 <- frame.to.ld(.Times, 
+                     response.column = 1, 
+                     censor.column = 2)
+
+.fsm1 <- mlest(.fld1, "weibull")
+
+.out = nlminb(start = c(.5, 38), 
+              objective = .f_location, 
+              .t = .Times$times,
+              .delta = ifelse(.Times$censor == "failed",0,1), 
+              .gamma = 0,
+              lower = c(limits$L[1],limits$L[2]))
+```
+
+```{r, echo=FALSE}
+.params1 <- rbind(SMRD = .fsm1$mle.table[4:3,1], Custom = .out$par)
+```
+
+```{r, echo=FALSE}
+# fit threshold data
+.Times2 <- .Times3 <- subset(.Times, subset = (.times - .gamma) >= 0)
+
+.Times2$times <- .Times2$times - .gamma
+
+.fld2 <- frame.to.ld(.Times2, 
+                      response.column = 1, 
+                      censor.column = 2)
+
+.fsm2 <- mlest(.fld2, "weibull")
+
+.out = nlminb(start = c(.5, 38), 
+              objective = .f_location, 
+              .t = .Times2$times + .gamma,
+              .delta = ifelse(.Times2$censor == "failed",0,1), 
+              .gamma = .gamma,
+              lower = c(limits$L[1],limits$L[2]))
+
+.params2 <- rbind(SMRD = .fsm2$mle.table[4:3,1], Custom = .out$par)
+```
+
+```{r, echo=FALSE}
+# fit truncated data
+.Times3$trunctime = rep(.gamma, nrow(.Times2))
+.Times3$trunctype = rep("left", nrow(.Times2))
+
+.fld3 <- frame.to.ld(.Times3, 
+                      response.column = 1, 
+                      censor.column = 2,
+                      truncation.type.column = 4, 
+                      truncation.response.column = 3)
+
+.fsm3 <- mlest(.fld3, "weibull")
+
+.out = nlminb(start = c(.5, 38), 
+              objective = .f_truncate, 
+              .t = .Times3$times,
+              .delta = ifelse(.Times3$censor == "failed",0,1),
+              .gamma = .gamma,
+              lower = c(limits$L[1],limits$L[2]))
+
+.params3 <- rbind(SMRD = .fsm3$mle.table[4:3,1], Custom = .out$par)
+```
+
+```{r, echo=FALSE}
+DT::datatable(data.frame(population = 1:.subpops,
+                         samples = .N,
+                         shape = round(.beta, digits = 4),
+                         scale = round(.eta, digits = 4),
+                         threshold = round(.gamma, digits = 4)))
+```
+
+
+```{r, fig.width=10, fig.height=10, echo=FALSE}
+par(mfrow = c(2,2))
+plot(.fld1)
+mleprobplot(.fld1, distribution = "weibull")
+mleprobplot(.fld2, distribution = "weibull")
+mleprobplot(.fld3, distribution = "weibull")
+```
+
+### Example 3
+
+```{r, results='hide', echo=FALSE}
+# Randomly sample simulation parameters
+# number of sub-populations
+.subpops = sample(1:3, size = 1) 
+
+# sample N observations for each sub population 
+.N    = sample(limits$N[1]:limits$N[2], size = .subpops)
+
+# sample shape and scale parameters
+.beta = runif(.subpops, min = limits$B[1], max = limits$B[2])
+.eta  = runif(.subpops, min = limits$E[1], max = limits$E[2])
+
+# sample threshold and truncation value
+.gamma = runif(1, 
+               min = limits$G[1], 
+               max = limits$G[2])
+
+# include censoring
+.cens <- sample(c(T,F), size = 1)
+
+# create an empty vector of failure times
+.times <- c()
+
+# populate the failure vector
+for(i in 1:.subpops){
+  
+    .this <- rweibull(.N[i], shape = .beta[i], scale = .eta[i])
+    .times <- c(.times, .this)
+  
+}
+
+# Create a data.frame with times and censoring
+.Times <- data.frame(times = .times,
+                     censor = sample(c("right","failed"), 
+                                     size = sum(.N), 
+                                     prob = `if`(.cens,c(0.3,0.7),c(0,1)), 
+                                     replace = T))
+```
+
+```{r, echo=FALSE}
+# fit basic data
+.fld1 <- frame.to.ld(.Times, 
+                     response.column = 1, 
+                     censor.column = 2)
+
+.fsm1 <- mlest(.fld1, "weibull")
+
+.out = nlminb(start = c(.5, 38), 
+              objective = .f_location, 
+              .t = .Times$times,
+              .delta = ifelse(.Times$censor == "failed",0,1), 
+              .gamma = 0,
+              lower = c(limits$L[1],limits$L[2]))
+```
+
+```{r, echo=FALSE}
+.params1 <- rbind(SMRD = .fsm1$mle.table[4:3,1], Custom = .out$par)
+```
+
+```{r, echo=FALSE}
+# fit threshold data
+.Times2 <- .Times3 <- subset(.Times, subset = (.times - .gamma) >= 0)
+
+.Times2$times <- .Times2$times - .gamma
+
+.fld2 <- frame.to.ld(.Times2, 
+                      response.column = 1, 
+                      censor.column = 2)
+
+.fsm2 <- mlest(.fld2, "weibull")
+
+.out = nlminb(start = c(.5, 38), 
+              objective = .f_location, 
+              .t = .Times2$times + .gamma,
+              .delta = ifelse(.Times2$censor == "failed",0,1), 
+              .gamma = .gamma,
+              lower = c(limits$L[1],limits$L[2]))
+
+.params2 <- rbind(SMRD = .fsm2$mle.table[4:3,1], Custom = .out$par)
+```
+
+```{r, echo=FALSE}
+# fit truncated data
+.Times3$trunctime = rep(.gamma, nrow(.Times2))
+.Times3$trunctype = rep("left", nrow(.Times2))
+
+.fld3 <- frame.to.ld(.Times3, 
+                      response.column = 1, 
+                      censor.column = 2,
+                      truncation.type.column = 4, 
+                      truncation.response.column = 3)
+
+.fsm3 <- mlest(.fld3, "weibull")
+
+.out = nlminb(start = c(.5, 38), 
+              objective = .f_truncate, 
+              .t = .Times3$times,
+              .delta = ifelse(.Times3$censor == "failed",0,1),
+              .gamma = .gamma,
+              lower = c(limits$L[1],limits$L[2]))
+
+.params3 <- rbind(SMRD = .fsm3$mle.table[4:3,1], Custom = .out$par)
+```
+
+```{r, echo=FALSE}
+DT::datatable(data.frame(population = 1:.subpops,
+                         samples = .N,
+                         shape = round(.beta, digits = 4),
+                         scale = round(.eta, digits = 4),
+                         threshold = round(.gamma, digits = 4)))
+```
+
+
+```{r, fig.width=10, fig.height=10, echo=FALSE}
+par(mfrow = c(2,2))
+plot(.fld1)
+mleprobplot(.fld1, distribution = "weibull")
+mleprobplot(.fld2, distribution = "weibull")
+mleprobplot(.fld3, distribution = "weibull")
+```
+
+### Example 4
+
+```{r, results='hide', echo=FALSE}
+# Randomly sample simulation parameters
+# number of sub-populations
+.subpops = sample(1:3, size = 1) 
+
+# sample N observations for each sub population 
+.N    = sample(limits$N[1]:limits$N[2], size = .subpops)
+
+# sample shape and scale parameters
+.beta = runif(.subpops, min = limits$B[1], max = limits$B[2])
+.eta  = runif(.subpops, min = limits$E[1], max = limits$E[2])
+
+# sample threshold and truncation value
+.gamma = runif(1, 
+               min = limits$G[1], 
+               max = limits$G[2])
+
+# include censoring
+.cens <- sample(c(T,F), size = 1)
+
+# create an empty vector of failure times
+.times <- c()
+
+# populate the failure vector
+for(i in 1:.subpops){
+  
+    .this <- rweibull(.N[i], shape = .beta[i], scale = .eta[i])
+    .times <- c(.times, .this)
+  
+}
+
+# Create a data.frame with times and censoring
+.Times <- data.frame(times = .times,
+                     censor = sample(c("right","failed"), 
+                                     size = sum(.N), 
+                                     prob = `if`(.cens,c(0.3,0.7),c(0,1)), 
+                                     replace = T))
+```
+
+```{r, echo=FALSE}
+# fit basic data
+.fld1 <- frame.to.ld(.Times, 
+                     response.column = 1, 
+                     censor.column = 2)
+
+.fsm1 <- mlest(.fld1, "weibull")
+
+.out = nlminb(start = c(.5, 38), 
+              objective = .f_location, 
+              .t = .Times$times,
+              .delta = ifelse(.Times$censor == "failed",0,1), 
+              .gamma = 0,
+              lower = c(limits$L[1],limits$L[2]))
+```
+
+```{r, echo=FALSE}
+.params1 <- rbind(SMRD = .fsm1$mle.table[4:3,1], Custom = .out$par)
+```
+
+```{r, echo=FALSE}
+# fit threshold data
+.Times2 <- .Times3 <- subset(.Times, subset = (.times - .gamma) >= 0)
+
+.Times2$times <- .Times2$times - .gamma
+
+.fld2 <- frame.to.ld(.Times2, 
+                      response.column = 1, 
+                      censor.column = 2)
+
+.fsm2 <- mlest(.fld2, "weibull")
+
+.out = nlminb(start = c(.5, 38), 
+              objective = .f_location, 
+              .t = .Times2$times + .gamma,
+              .delta = ifelse(.Times2$censor == "failed",0,1), 
+              .gamma = .gamma,
+              lower = c(limits$L[1],limits$L[2]))
+
+.params2 <- rbind(SMRD = .fsm2$mle.table[4:3,1], Custom = .out$par)
+```
+
+```{r, echo=FALSE}
+# fit truncated data
+.Times3$trunctime = rep(.gamma, nrow(.Times2))
+.Times3$trunctype = rep("left", nrow(.Times2))
+
+.fld3 <- frame.to.ld(.Times3, 
+                      response.column = 1, 
+                      censor.column = 2,
+                      truncation.type.column = 4, 
+                      truncation.response.column = 3)
+
+.fsm3 <- mlest(.fld3, "weibull")
+
+.out = nlminb(start = c(.5, 38), 
+              objective = .f_truncate, 
+              .t = .Times3$times,
+              .delta = ifelse(.Times3$censor == "failed",0,1),
+              .gamma = .gamma,
+              lower = c(limits$L[1],limits$L[2]))
+
+.params3 <- rbind(SMRD = .fsm3$mle.table[4:3,1], Custom = .out$par)
+```
+
+```{r, echo=FALSE}
+DT::datatable(data.frame(population = 1:.subpops,
+                         samples = .N,
+                         shape = round(.beta, digits = 4),
+                         scale = round(.eta, digits = 4),
+                         threshold = round(.gamma, digits = 4)))
+```
+
+
+```{r, fig.width=10, fig.height=10, echo=FALSE}
+par(mfrow = c(2,2))
+plot(.fld1)
+mleprobplot(.fld1, distribution = "weibull")
+mleprobplot(.fld2, distribution = "weibull")
+mleprobplot(.fld3, distribution = "weibull")
+```
+
+### Example 5
+
+```{r, results='hide', echo=FALSE}
+# Randomly sample simulation parameters
+# number of sub-populations
+.subpops = sample(1:3, size = 1) 
+
+# sample N observations for each sub population 
+.N    = sample(limits$N[1]:limits$N[2], size = .subpops)
+
+# sample shape and scale parameters
+.beta = runif(.subpops, min = limits$B[1], max = limits$B[2])
+.eta  = runif(.subpops, min = limits$E[1], max = limits$E[2])
+
+# sample threshold and truncation value
+.gamma = runif(1, 
+               min = limits$G[1], 
+               max = limits$G[2])
+
+# include censoring
+.cens <- sample(c(T,F), size = 1)
+
+# create an empty vector of failure times
+.times <- c()
+
+# populate the failure vector
+for(i in 1:.subpops){
+  
+    .this <- rweibull(.N[i], shape = .beta[i], scale = .eta[i])
+    .times <- c(.times, .this)
+  
+}
+
+# Create a data.frame with times and censoring
+.Times <- data.frame(times = .times,
+                     censor = sample(c("right","failed"), 
+                                     size = sum(.N), 
+                                     prob = `if`(.cens,c(0.3,0.7),c(0,1)), 
+                                     replace = T))
+```
+
+```{r, echo=FALSE}
+# fit basic data
+.fld1 <- frame.to.ld(.Times, 
+                     response.column = 1, 
+                     censor.column = 2)
+
+.fsm1 <- mlest(.fld1, "weibull")
+
+.out = nlminb(start = c(.5, 38), 
+              objective = .f_location, 
+              .t = .Times$times,
+              .delta = ifelse(.Times$censor == "failed",0,1), 
+              .gamma = 0,
+              lower = c(limits$L[1],limits$L[2]))
+```
+
+```{r, echo=FALSE}
+.params1 <- rbind(SMRD = .fsm1$mle.table[4:3,1], Custom = .out$par)
+```
+
+```{r, echo=FALSE}
+# fit threshold data
+.Times2 <- .Times3 <- subset(.Times, subset = (.times - .gamma) >= 0)
+
+.Times2$times <- .Times2$times - .gamma
+
+.fld2 <- frame.to.ld(.Times2, 
+                      response.column = 1, 
+                      censor.column = 2)
+
+.fsm2 <- mlest(.fld2, "weibull")
+
+.out = nlminb(start = c(.5, 38), 
+              objective = .f_location, 
+              .t = .Times2$times + .gamma,
+              .delta = ifelse(.Times2$censor == "failed",0,1), 
+              .gamma = .gamma,
+              lower = c(limits$L[1],limits$L[2]))
+
+.params2 <- rbind(SMRD = .fsm2$mle.table[4:3,1], Custom = .out$par)
+```
+
+```{r, echo=FALSE}
+# fit truncated data
+.Times3$trunctime = rep(.gamma, nrow(.Times2))
+.Times3$trunctype = rep("left", nrow(.Times2))
+
+.fld3 <- frame.to.ld(.Times3, 
+                      response.column = 1, 
+                      censor.column = 2,
+                      truncation.type.column = 4, 
+                      truncation.response.column = 3)
+
+.fsm3 <- mlest(.fld3, "weibull")
+
+.out = nlminb(start = c(.5, 38), 
+              objective = .f_truncate, 
+              .t = .Times3$times,
+              .delta = ifelse(.Times3$censor == "failed",0,1),
+              .gamma = .gamma,
+              lower = c(limits$L[1],limits$L[2]))
+
+.params3 <- rbind(SMRD = .fsm3$mle.table[4:3,1], Custom = .out$par)
+```
+
+```{r, echo=FALSE}
+DT::datatable(data.frame(population = 1:.subpops,
+                         samples = .N,
+                         shape = round(.beta, digits = 4),
+                         scale = round(.eta, digits = 4),
+                         threshold = round(.gamma, digits = 4)))
+```
+
+
+```{r, fig.width=10, fig.height=10, echo=FALSE}
+par(mfrow = c(2,2))
+plot(.fld1)
+mleprobplot(.fld1, distribution = "weibull")
+mleprobplot(.fld2, distribution = "weibull")
+mleprobplot(.fld3, distribution = "weibull")
+```
+
+### Example 6
+
+```{r, results='hide', echo=FALSE}
+# Randomly sample simulation parameters
+# number of sub-populations
+.subpops = sample(1:3, size = 1) 
+
+# sample N observations for each sub population 
+.N    = sample(limits$N[1]:limits$N[2], size = .subpops)
+
+# sample shape and scale parameters
+.beta = runif(.subpops, min = limits$B[1], max = limits$B[2])
+.eta  = runif(.subpops, min = limits$E[1], max = limits$E[2])
+
+# sample threshold and truncation value
+.gamma = runif(1, 
+               min = limits$G[1], 
+               max = limits$G[2])
+
+# include censoring
+.cens <- sample(c(T,F), size = 1)
+
+# create an empty vector of failure times
+.times <- c()
+
+# populate the failure vector
+for(i in 1:.subpops){
+  
+    .this <- rweibull(.N[i], shape = .beta[i], scale = .eta[i])
+    .times <- c(.times, .this)
+  
+}
+
+# Create a data.frame with times and censoring
+.Times <- data.frame(times = .times,
+                     censor = sample(c("right","failed"), 
+                                     size = sum(.N), 
+                                     prob = `if`(.cens,c(0.3,0.7),c(0,1)), 
+                                     replace = T))
+```
+
+```{r, echo=FALSE}
+# fit basic data
+.fld1 <- frame.to.ld(.Times, 
+                     response.column = 1, 
+                     censor.column = 2)
+
+.fsm1 <- mlest(.fld1, "weibull")
+
+.out = nlminb(start = c(.5, 38), 
+              objective = .f_location, 
+              .t = .Times$times,
+              .delta = ifelse(.Times$censor == "failed",0,1), 
+              .gamma = 0,
+              lower = c(limits$L[1],limits$L[2]))
+```
+
+```{r, echo=FALSE}
+.params1 <- rbind(SMRD = .fsm1$mle.table[4:3,1], Custom = .out$par)
+```
+
+```{r, echo=FALSE}
+# fit threshold data
+.Times2 <- .Times3 <- subset(.Times, subset = (.times - .gamma) >= 0)
+
+.Times2$times <- .Times2$times - .gamma
+
+.fld2 <- frame.to.ld(.Times2, 
+                      response.column = 1, 
+                      censor.column = 2)
+
+.fsm2 <- mlest(.fld2, "weibull")
+
+.out = nlminb(start = c(.5, 38), 
+              objective = .f_location, 
+              .t = .Times2$times + .gamma,
+              .delta = ifelse(.Times2$censor == "failed",0,1), 
+              .gamma = .gamma,
+              lower = c(limits$L[1],limits$L[2]))
+
+.params2 <- rbind(SMRD = .fsm2$mle.table[4:3,1], Custom = .out$par)
+```
+
+```{r, echo=FALSE}
+# fit truncated data
+.Times3$trunctime = rep(.gamma, nrow(.Times2))
+.Times3$trunctype = rep("left", nrow(.Times2))
+
+.fld3 <- frame.to.ld(.Times3, 
+                      response.column = 1, 
+                      censor.column = 2,
+                      truncation.type.column = 4, 
+                      truncation.response.column = 3)
+
+.fsm3 <- mlest(.fld3, "weibull")
+
+.out = nlminb(start = c(.5, 38), 
+              objective = .f_truncate, 
+              .t = .Times3$times,
+              .delta = ifelse(.Times3$censor == "failed",0,1),
+              .gamma = .gamma,
+              lower = c(limits$L[1],limits$L[2]))
+
+.params3 <- rbind(SMRD = .fsm3$mle.table[4:3,1], Custom = .out$par)
+```
+
+```{r, echo=FALSE}
+DT::datatable(data.frame(population = 1:.subpops,
+                         samples = .N,
+                         shape = round(.beta, digits = 4),
+                         scale = round(.eta, digits = 4),
+                         threshold = round(.gamma, digits = 4)))
+```
+
+
+```{r, fig.width=10, fig.height=10, echo=FALSE}
+par(mfrow = c(2,2))
+plot(.fld1)
+mleprobplot(.fld1, distribution = "weibull")
+mleprobplot(.fld2, distribution = "weibull")
+mleprobplot(.fld3, distribution = "weibull")
+```
+
+### Example 7
+
+```{r, results='hide', echo=FALSE}
+# Randomly sample simulation parameters
+# number of sub-populations
+.subpops = sample(1:3, size = 1) 
+
+# sample N observations for each sub population 
+.N    = sample(limits$N[1]:limits$N[2], size = .subpops)
+
+# sample shape and scale parameters
+.beta = runif(.subpops, min = limits$B[1], max = limits$B[2])
+.eta  = runif(.subpops, min = limits$E[1], max = limits$E[2])
+
+# sample threshold and truncation value
+.gamma = runif(1, 
+               min = limits$G[1], 
+               max = limits$G[2])
+
+# include censoring
+.cens <- sample(c(T,F), size = 1)
+
+# create an empty vector of failure times
+.times <- c()
+
+# populate the failure vector
+for(i in 1:.subpops){
+  
+    .this <- rweibull(.N[i], shape = .beta[i], scale = .eta[i])
+    .times <- c(.times, .this)
+  
+}
+
+# Create a data.frame with times and censoring
+.Times <- data.frame(times = .times,
+                     censor = sample(c("right","failed"), 
+                                     size = sum(.N), 
+                                     prob = `if`(.cens,c(0.3,0.7),c(0,1)), 
+                                     replace = T))
+```
+
+```{r, echo=FALSE}
+# fit basic data
+.fld1 <- frame.to.ld(.Times, 
+                     response.column = 1, 
+                     censor.column = 2)
+
+.fsm1 <- mlest(.fld1, "weibull")
+
+.out = nlminb(start = c(.5, 38), 
+              objective = .f_location, 
+              .t = .Times$times,
+              .delta = ifelse(.Times$censor == "failed",0,1), 
+              .gamma = 0,
+              lower = c(limits$L[1],limits$L[2]))
+```
+
+```{r, echo=FALSE}
+.params1 <- rbind(SMRD = .fsm1$mle.table[4:3,1], Custom = .out$par)
+```
+
+```{r, echo=FALSE}
+# fit threshold data
+.Times2 <- .Times3 <- subset(.Times, subset = (.times - .gamma) >= 0)
+
+.Times2$times <- .Times2$times - .gamma
+
+.fld2 <- frame.to.ld(.Times2, 
+                      response.column = 1, 
+                      censor.column = 2)
+
+.fsm2 <- mlest(.fld2, "weibull")
+
+.out = nlminb(start = c(.5, 38), 
+              objective = .f_location, 
+              .t = .Times2$times + .gamma,
+              .delta = ifelse(.Times2$censor == "failed",0,1), 
+              .gamma = .gamma,
+              lower = c(limits$L[1],limits$L[2]))
+
+.params2 <- rbind(SMRD = .fsm2$mle.table[4:3,1], Custom = .out$par)
+```
+
+```{r, echo=FALSE}
+# fit truncated data
+.Times3$trunctime = rep(.gamma, nrow(.Times2))
+.Times3$trunctype = rep("left", nrow(.Times2))
+
+.fld3 <- frame.to.ld(.Times3, 
+                      response.column = 1, 
+                      censor.column = 2,
+                      truncation.type.column = 4, 
+                      truncation.response.column = 3)
+
+.fsm3 <- mlest(.fld3, "weibull")
+
+.out = nlminb(start = c(.5, 38), 
+              objective = .f_truncate, 
+              .t = .Times3$times,
+              .delta = ifelse(.Times3$censor == "failed",0,1),
+              .gamma = .gamma,
+              lower = c(limits$L[1],limits$L[2]))
+
+.params3 <- rbind(SMRD = .fsm3$mle.table[4:3,1], Custom = .out$par)
+```
+
+```{r, echo=FALSE}
+DT::datatable(data.frame(population = 1:.subpops,
+                         samples = .N,
+                         shape = round(.beta, digits = 4),
+                         scale = round(.eta, digits = 4),
+                         threshold = round(.gamma, digits = 4)))
+```
+
+
+```{r, fig.width=10, fig.height=10, echo=FALSE}
+par(mfrow = c(2,2))
+plot(.fld1)
+mleprobplot(.fld1, distribution = "weibull")
+mleprobplot(.fld2, distribution = "weibull")
+mleprobplot(.fld3, distribution = "weibull")
+```
+
+### Example 8
+
+```{r, results='hide', echo=FALSE}
+# Randomly sample simulation parameters
+# number of sub-populations
+.subpops = sample(1:3, size = 1) 
+
+# sample N observations for each sub population 
+.N    = sample(limits$N[1]:limits$N[2], size = .subpops)
+
+# sample shape and scale parameters
+.beta = runif(.subpops, min = limits$B[1], max = limits$B[2])
+.eta  = runif(.subpops, min = limits$E[1], max = limits$E[2])
+
+# sample threshold and truncation value
+.gamma = runif(1, 
+               min = limits$G[1], 
+               max = limits$G[2])
+
+# include censoring
+.cens <- sample(c(T,F), size = 1)
+
+# create an empty vector of failure times
+.times <- c()
+
+# populate the failure vector
+for(i in 1:.subpops){
+  
+    .this <- rweibull(.N[i], shape = .beta[i], scale = .eta[i])
+    .times <- c(.times, .this)
+  
+}
+
+# Create a data.frame with times and censoring
+.Times <- data.frame(times = .times,
+                     censor = sample(c("right","failed"), 
+                                     size = sum(.N), 
+                                     prob = `if`(.cens,c(0.3,0.7),c(0,1)), 
+                                     replace = T))
+```
+
+```{r, echo=FALSE}
+# fit basic data
+.fld1 <- frame.to.ld(.Times, 
+                     response.column = 1, 
+                     censor.column = 2)
+
+.fsm1 <- mlest(.fld1, "weibull")
+
+.out = nlminb(start = c(.5, 38), 
+              objective = .f_location, 
+              .t = .Times$times,
+              .delta = ifelse(.Times$censor == "failed",0,1), 
+              .gamma = 0,
+              lower = c(limits$L[1],limits$L[2]))
+```
+
+```{r, echo=FALSE}
+.params1 <- rbind(SMRD = .fsm1$mle.table[4:3,1], Custom = .out$par)
+```
+
+```{r, echo=FALSE}
+# fit threshold data
+.Times2 <- .Times3 <- subset(.Times, subset = (.times - .gamma) >= 0)
+
+.Times2$times <- .Times2$times - .gamma
+
+.fld2 <- frame.to.ld(.Times2, 
+                      response.column = 1, 
+                      censor.column = 2)
+
+.fsm2 <- mlest(.fld2, "weibull")
+
+.out = nlminb(start = c(.5, 38), 
+              objective = .f_location, 
+              .t = .Times2$times + .gamma,
+              .delta = ifelse(.Times2$censor == "failed",0,1), 
+              .gamma = .gamma,
+              lower = c(limits$L[1],limits$L[2]))
+
+.params2 <- rbind(SMRD = .fsm2$mle.table[4:3,1], Custom = .out$par)
+```
+
+```{r, echo=FALSE}
+# fit truncated data
+.Times3$trunctime = rep(.gamma, nrow(.Times2))
+.Times3$trunctype = rep("left", nrow(.Times2))
+
+.fld3 <- frame.to.ld(.Times3, 
+                      response.column = 1, 
+                      censor.column = 2,
+                      truncation.type.column = 4, 
+                      truncation.response.column = 3)
+
+.fsm3 <- mlest(.fld3, "weibull")
+
+.out = nlminb(start = c(.5, 38), 
+              objective = .f_truncate, 
+              .t = .Times3$times,
+              .delta = ifelse(.Times3$censor == "failed",0,1),
+              .gamma = .gamma,
+              lower = c(limits$L[1],limits$L[2]))
+
+.params3 <- rbind(SMRD = .fsm3$mle.table[4:3,1], Custom = .out$par)
+```
+
+```{r, echo=FALSE}
+DT::datatable(data.frame(population = 1:.subpops,
+                         samples = .N,
+                         shape = round(.beta, digits = 4),
+                         scale = round(.eta, digits = 4),
+                         threshold = round(.gamma, digits = 4)))
+```
+
+
+```{r, fig.width=10, fig.height=10, echo=FALSE}
+par(mfrow = c(2,2))
+plot(.fld1)
+mleprobplot(.fld1, distribution = "weibull")
+mleprobplot(.fld2, distribution = "weibull")
+mleprobplot(.fld3, distribution = "weibull")
+```
+
+### Example 9
+
+```{r, results='hide', echo=FALSE}
+# Randomly sample simulation parameters
+# number of sub-populations
+.subpops = sample(1:3, size = 1) 
+
+# sample N observations for each sub population 
+.N    = sample(limits$N[1]:limits$N[2], size = .subpops)
+
+# sample shape and scale parameters
+.beta = runif(.subpops, min = limits$B[1], max = limits$B[2])
+.eta  = runif(.subpops, min = limits$E[1], max = limits$E[2])
+
+# sample threshold and truncation value
+.gamma = runif(1, 
+               min = limits$G[1], 
+               max = limits$G[2])
+
+# include censoring
+.cens <- sample(c(T,F), size = 1)
+
+# create an empty vector of failure times
+.times <- c()
+
+# populate the failure vector
+for(i in 1:.subpops){
+  
+    .this <- rweibull(.N[i], shape = .beta[i], scale = .eta[i])
+    .times <- c(.times, .this)
+  
+}
+
+# Create a data.frame with times and censoring
+.Times <- data.frame(times = .times,
+                     censor = sample(c("right","failed"), 
+                                     size = sum(.N), 
+                                     prob = `if`(.cens,c(0.3,0.7),c(0,1)), 
+                                     replace = T))
+```
+
+```{r, echo=FALSE}
+# fit basic data
+.fld1 <- frame.to.ld(.Times, 
+                     response.column = 1, 
+                     censor.column = 2)
+
+.fsm1 <- mlest(.fld1, "weibull")
+
+.out = nlminb(start = c(.5, 38), 
+              objective = .f_location, 
+              .t = .Times$times,
+              .delta = ifelse(.Times$censor == "failed",0,1), 
+              .gamma = 0,
+              lower = c(limits$L[1],limits$L[2]))
+```
+
+```{r, echo=FALSE}
+.params1 <- rbind(SMRD = .fsm1$mle.table[4:3,1], Custom = .out$par)
+```
+
+```{r, echo=FALSE}
+# fit threshold data
+.Times2 <- .Times3 <- subset(.Times, subset = (.times - .gamma) >= 0)
+
+.Times2$times <- .Times2$times - .gamma
+
+.fld2 <- frame.to.ld(.Times2, 
+                      response.column = 1, 
+                      censor.column = 2)
+
+.fsm2 <- mlest(.fld2, "weibull")
+
+.out = nlminb(start = c(.5, 38), 
+              objective = .f_location, 
+              .t = .Times2$times + .gamma,
+              .delta = ifelse(.Times2$censor == "failed",0,1), 
+              .gamma = .gamma,
+              lower = c(limits$L[1],limits$L[2]))
+
+.params2 <- rbind(SMRD = .fsm2$mle.table[4:3,1], Custom = .out$par)
+```
+
+```{r, echo=FALSE}
+# fit truncated data
+.Times3$trunctime = rep(.gamma, nrow(.Times2))
+.Times3$trunctype = rep("left", nrow(.Times2))
+
+.fld3 <- frame.to.ld(.Times3, 
+                      response.column = 1, 
+                      censor.column = 2,
+                      truncation.type.column = 4, 
+                      truncation.response.column = 3)
+
+.fsm3 <- mlest(.fld3, "weibull")
+
+.out = nlminb(start = c(.5, 38), 
+              objective = .f_truncate, 
+              .t = .Times3$times,
+              .delta = ifelse(.Times3$censor == "failed",0,1),
+              .gamma = .gamma,
+              lower = c(limits$L[1],limits$L[2]))
+
+.params3 <- rbind(SMRD = .fsm3$mle.table[4:3,1], Custom = .out$par)
+```
+
+```{r, echo=FALSE}
+DT::datatable(data.frame(population = 1:.subpops,
+                         samples = .N,
+                         shape = round(.beta, digits = 4),
+                         scale = round(.eta, digits = 4),
+                         threshold = round(.gamma, digits = 4)))
+```
+
+
+```{r, fig.width=10, fig.height=10, echo=FALSE}
+par(mfrow = c(2,2))
+plot(.fld1)
+mleprobplot(.fld1, distribution = "weibull")
+mleprobplot(.fld2, distribution = "weibull")
+mleprobplot(.fld3, distribution = "weibull")
+```
+
+### Example 10
+
+```{r, results='hide', echo=FALSE}
+# Randomly sample simulation parameters
+# number of sub-populations
+.subpops = sample(1:3, size = 1) 
+
+# sample N observations for each sub population 
+.N    = sample(limits$N[1]:limits$N[2], size = .subpops)
+
+# sample shape and scale parameters
+.beta = runif(.subpops, min = limits$B[1], max = limits$B[2])
+.eta  = runif(.subpops, min = limits$E[1], max = limits$E[2])
+
+# sample threshold and truncation value
+.gamma = runif(1, 
+               min = limits$G[1], 
+               max = limits$G[2])
+
+# include censoring
+.cens <- sample(c(T,F), size = 1)
+
+# create an empty vector of failure times
+.times <- c()
+
+# populate the failure vector
+for(i in 1:.subpops){
+  
+    .this <- rweibull(.N[i], shape = .beta[i], scale = .eta[i])
+    .times <- c(.times, .this)
+  
+}
+
+# Create a data.frame with times and censoring
+.Times <- data.frame(times = .times,
+                     censor = sample(c("right","failed"), 
+                                     size = sum(.N), 
+                                     prob = `if`(.cens,c(0.3,0.7),c(0,1)), 
+                                     replace = T))
+```
+
+```{r, echo=FALSE}
+# fit basic data
+.fld1 <- frame.to.ld(.Times, 
+                     response.column = 1, 
+                     censor.column = 2)
+
+.fsm1 <- mlest(.fld1, "weibull")
+
+.out = nlminb(start = c(.5, 38), 
+              objective = .f_location, 
+              .t = .Times$times,
+              .delta = ifelse(.Times$censor == "failed",0,1), 
+              .gamma = 0,
+              lower = c(limits$L[1],limits$L[2]))
+```
+
+```{r, echo=FALSE}
+.params1 <- rbind(SMRD = .fsm1$mle.table[4:3,1], Custom = .out$par)
+```
+
+```{r, echo=FALSE}
+# fit threshold data
+.Times2 <- .Times3 <- subset(.Times, subset = (.times - .gamma) >= 0)
+
+.Times2$times <- .Times2$times - .gamma
+
+.fld2 <- frame.to.ld(.Times2, 
+                      response.column = 1, 
+                      censor.column = 2)
+
+.fsm2 <- mlest(.fld2, "weibull")
+
+.out = nlminb(start = c(.5, 38), 
+              objective = .f_location, 
+              .t = .Times2$times + .gamma,
+              .delta = ifelse(.Times2$censor == "failed",0,1), 
+              .gamma = .gamma,
+              lower = c(limits$L[1],limits$L[2]))
+
+.params2 <- rbind(SMRD = .fsm2$mle.table[4:3,1], Custom = .out$par)
+```
+
+```{r, echo=FALSE}
+# fit truncated data
+.Times3$trunctime = rep(.gamma, nrow(.Times2))
+.Times3$trunctype = rep("left", nrow(.Times2))
+
+.fld3 <- frame.to.ld(.Times3, 
+                      response.column = 1, 
+                      censor.column = 2,
+                      truncation.type.column = 4, 
+                      truncation.response.column = 3)
+
+.fsm3 <- mlest(.fld3, "weibull")
+
+.out = nlminb(start = c(.5, 38), 
+              objective = .f_truncate, 
+              .t = .Times3$times,
+              .delta = ifelse(.Times3$censor == "failed",0,1),
+              .gamma = .gamma,
+              lower = c(limits$L[1],limits$L[2]))
+
+.params3 <- rbind(SMRD = .fsm3$mle.table[4:3,1], Custom = .out$par)
+```
+
+```{r, echo=FALSE}
+DT::datatable(data.frame(population = 1:.subpops,
+                         samples = .N,
+                         shape = round(.beta, digits = 4),
+                         scale = round(.eta, digits = 4),
+                         threshold = round(.gamma, digits = 4)))
+```
+
+
+```{r, fig.width=10, fig.height=10, echo=FALSE}
+par(mfrow = c(2,2))
+plot(.fld1)
+mleprobplot(.fld1, distribution = "weibull")
+mleprobplot(.fld2, distribution = "weibull")
+mleprobplot(.fld3, distribution = "weibull")
+```
