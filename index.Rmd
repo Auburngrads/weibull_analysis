@@ -321,7 +321,7 @@ weib_q = "t(p) = \\eta\\left(\\ln\\left[\\frac{1}{1 - p}\\right]\\right)^{1/\\be
 ```
 
 ```{r, echo=FALSE}
-sh = 2.1
+sh = .81
 sc = 150
 t = seq(0,350, 0.5)
 p = pweibull(t, sh = sh, sc = sc)
