@@ -281,4 +281,5 @@ mtext(side = 4,
       las = 0,
       col = "red",
      font = 4)
-dev.off()
+abline(h = log(mean(obs)), col = "black",lwd = 2)
+#dev.off()
